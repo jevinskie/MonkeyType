@@ -176,11 +176,10 @@ def get_func(frame: FrameType) -> Optional[Callable[..., Any]]:
 
 
 RETURN_VALUE_OPCODE = opcode.opmap["RETURN_VALUE"]
-if sys.version_info >= (3, 12):
+RETURN_OPCODES = [RETURN_VALUE_OPCODE]
+if (3, 12) <= sys.version_info < (3, 13):
     RETURN_CONST_OPCODE = opcode.opmap["RETURN_CONST"]
-    RETURN_OPCODES = (RETURN_VALUE_OPCODE, RETURN_CONST_OPCODE)
-else:
-    RETURN_OPCODES = (RETURN_VALUE_OPCODE,)
+    RETURN_OPCODES.append(RETURN_CONST_OPCODE)
 YIELD_VALUE_OPCODE = opcode.opmap["YIELD_VALUE"]
 
 # A CodeFilter is a predicate that decides whether or not a the call for the
