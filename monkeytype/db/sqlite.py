@@ -3,9 +3,9 @@
 #
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
-import datetime
 import logging
 import sqlite3
+import time
 from typing import Iterable, List, Optional, Tuple, Union
 
 from monkeytype.db.base import CallTraceStore, CallTraceThunk
@@ -24,7 +24,7 @@ def create_call_trace_table(
     queries = [
         """
         CREATE TABLE IF NOT EXISTS {table} (
-          created_at  TEXT,
+          created_at  REAL,
           module      TEXT,
           qualname    TEXT,
           arg_types   TEXT,
@@ -87,7 +87,7 @@ class SQLiteStore(CallTraceStore):
         for row in serialize_traces(traces):
             values.append(
                 (
-                    datetime.datetime.now(),
+                    time.time(),
                     row.module,
                     row.qualname,
                     row.arg_types,
