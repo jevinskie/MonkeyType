@@ -43,7 +43,7 @@ from monkeytype.typing import (
     DUMMY_TYPED_DICT_NAME,
 )
 
-from mypy_extensions import TypedDict
+from typing_extensions import TypedDict
 
 from .util import Dummy
 

@@ -19,3 +19,4 @@ importlib_metadata = "*"
 ruff = "*"
 
 [packages]
+typing_extensions = ">=4.0,<5"

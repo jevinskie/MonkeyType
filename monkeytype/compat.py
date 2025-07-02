@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 from typing import Any, ForwardRef, Union, _GenericAlias  # type: ignore[attr-defined]
 
-from mypy_extensions import _TypedDictMeta  # type: ignore[attr-defined]
+from typing_extensions import _TypedDictMeta  # type: ignore[attr-defined]
 
 try:
     from django.utils.functional import cached_property as cp

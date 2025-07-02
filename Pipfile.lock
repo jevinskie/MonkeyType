@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "a16fffc4a6b18fa0b59ccc210fcdf7e0924ddfcba66113c5a078ee18d0bdda93"
+            "sha256": "96f711e47ffb9c0d488d0efa02d871b6fd87e49282b7305ae81ef4c78f7368c2"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -13,7 +13,17 @@
             }
         ]
     },
-    "default": {},
+    "default": {
+        "typing-extensions": {
+            "hashes": [
+                "sha256:8676b788e32f02ab42d9e7c61324048ae4c6d844a399eebace3d4979d75ceef4",
+                "sha256:a1514509136dd0b477638fc68d6a91497af5076466ad0fa6c338e44e359944af"
+            ],
+            "index": "pypi",
+            "markers": "python_version >= '3.9'",
+            "version": "==4.14.0"
+        }
+    },
     "develop": {
         "alabaster": {
             "hashes": [
