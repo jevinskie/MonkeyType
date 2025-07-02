@@ -176,6 +176,11 @@ def get_func(frame: FrameType) -> Optional[Callable[..., Any]]:
 
 
 RETURN_VALUE_OPCODE = opcode.opmap["RETURN_VALUE"]
+if sys.version_info >= (3, 12):
+    RETURN_CONST_OPCODE = opcode.opmap["RETURN_CONST"]
+    RETURN_OPCODES = (RETURN_VALUE_OPCODE, RETURN_CONST_OPCODE)
+else:
+    RETURN_OPCODES = (RETURN_VALUE_OPCODE,)
 YIELD_VALUE_OPCODE = opcode.opmap["YIELD_VALUE"]
 
 # A CodeFilter is a predicate that decides whether or not a the call for the
@@ -257,7 +262,7 @@ class CallTracer:
         elif last_opcode == YIELD_VALUE_OPCODE:
             trace.add_yield_type(typ)
         else:
-            if last_opcode == RETURN_VALUE_OPCODE:
+            if last_opcode in RETURN_OPCODES:
                 trace.return_type = typ
             del self.traces[frame]
             self.logger.log(trace)
