@@ -12,6 +12,7 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from types import CodeType, FrameType
 from typing import Any, Callable, Dict, Iterator, Optional, Union, cast
+from wsgiref.simple_server import sys_version
 
 from monkeytype.compat import cached_property
 from monkeytype.typing import get_type
@@ -19,6 +20,7 @@ from monkeytype.util import get_func_fqname
 
 logger = logging.getLogger(__name__)
 
+import dis
 
 class CallTrace:
     """CallTrace contains the types observed during a single invocation of a function"""
@@ -177,10 +179,20 @@ def get_func(frame: FrameType) -> Optional[Callable[..., Any]]:
 
 RETURN_VALUE_OPCODE = opcode.opmap["RETURN_VALUE"]
 RETURN_OPCODES = [RETURN_VALUE_OPCODE]
-if (3, 12) <= sys.version_info < (3, 13):
+YIELD_VALUE_OPCODE = opcode.opmap["YIELD_VALUE"]
+YIELD_OPCODES = [YIELD_VALUE_OPCODE]
+if sys.version_info >= (3, 12):
     RETURN_CONST_OPCODE = opcode.opmap["RETURN_CONST"]
     RETURN_OPCODES.append(RETURN_CONST_OPCODE)
-YIELD_VALUE_OPCODE = opcode.opmap["YIELD_VALUE"]
+if sys.version_info >= (3, 13):
+    INSTRUMENTED_YIELD_VALUE = opcode.opmap["INSTRUMENTED_YIELD_VALUE"]
+    YIELD_OPCODES.append(INSTRUMENTED_YIELD_VALUE)
+RESUME_OPCODE = opcode.opmap["RESUME"]
+
+print(f"RETURN_VALUE_OPCODE: {RETURN_VALUE_OPCODE}")
+print(f"RETURN_OPCODES: {RETURN_OPCODES}")
+print(f"YIELD_VALUE_OPCODE: {YIELD_VALUE_OPCODE}")
+print(f"RESUME_OPCODE: {RESUME_OPCODE}")
 
 # A CodeFilter is a predicate that decides whether or not a the call for the
 # supplied code object should be traced.
@@ -256,9 +268,11 @@ class CallTracer:
         typ = get_type(arg, max_typed_dict_size=self.max_typed_dict_size)
         last_opcode = frame.f_code.co_code[frame.f_lasti]
         trace = self.traces.get(frame)
+        print(f"handle_return typ: {typ} last_opc: {last_opcode} f_lasti: {frame.f_lasti} trace: {trace}")
         if trace is None:
             return
-        elif last_opcode == YIELD_VALUE_OPCODE:
+        elif last_opcode in YIELD_OPCODES:
+            print(f"handle_return typ: {typ} last_opc: {last_opcode} trace: {trace} add yield type")
             trace.add_yield_type(typ)
         else:
             if last_opcode in RETURN_OPCODES:
@@ -268,6 +282,11 @@ class CallTracer:
 
     def __call__(self, frame: FrameType, event: str, arg: Any) -> "CallTracer":
         code = frame.f_code
+        print(f"call frame: {frame} event: {event} arg: {arg}")
+        if sys.version_info >= (3, 13):
+            dis.dis(code, adaptive=False, show_offsets=True)
+        else:
+            dis.dis(code, adaptive=False)
         if (
             event not in SUPPORTED_EVENTS
             or code.co_name == "trace_types"
