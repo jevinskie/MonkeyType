@@ -12,7 +12,6 @@ from abc import ABCMeta, abstractmethod
 from contextlib import contextmanager
 from types import CodeType, FrameType
 from typing import Any, Callable, Dict, Iterator, Optional, Union, cast
-from wsgiref.simple_server import sys_version
 
 from monkeytype.compat import cached_property
 from monkeytype.typing import get_type
@@ -181,12 +180,15 @@ RETURN_VALUE_OPCODE = opcode.opmap["RETURN_VALUE"]
 RETURN_OPCODES = [RETURN_VALUE_OPCODE]
 YIELD_VALUE_OPCODE = opcode.opmap["YIELD_VALUE"]
 YIELD_OPCODES = [YIELD_VALUE_OPCODE]
-if sys.version_info >= (3, 12):
+if (3, 12) <= sys.version_info < (3, 14):
     RETURN_CONST_OPCODE = opcode.opmap["RETURN_CONST"]
-    RETURN_OPCODES.append(RETURN_CONST_OPCODE)
-if sys.version_info >= (3, 13):
+    INSTRUMENTED_RETURN_CONST = opcode.opmap["INSTRUMENTED_RETURN_CONST"]
+    RETURN_OPCODES += [RETURN_CONST_OPCODE, INSTRUMENTED_RETURN_CONST]
+if sys.version_info >= (3, 12):
+    INSTRUMENTED_RETURN_VALUE = opcode.opmap["INSTRUMENTED_RETURN_VALUE"]
+    RETURN_OPCODES += [INSTRUMENTED_RETURN_VALUE]
     INSTRUMENTED_YIELD_VALUE = opcode.opmap["INSTRUMENTED_YIELD_VALUE"]
-    YIELD_OPCODES.append(INSTRUMENTED_YIELD_VALUE)
+    YIELD_OPCODES += [INSTRUMENTED_YIELD_VALUE]
 RESUME_OPCODE = opcode.opmap["RESUME"]
 
 print(f"RETURN_VALUE_OPCODE: {RETURN_VALUE_OPCODE}")
@@ -267,8 +269,11 @@ class CallTracer:
         # yield.
         typ = get_type(arg, max_typed_dict_size=self.max_typed_dict_size)
         last_opcode = frame.f_code.co_code[frame.f_lasti]
+        nd2_opc = frame.f_code.co_code[frame.f_lasti - 2]
         trace = self.traces.get(frame)
-        print(f"handle_return typ: {typ} last_opc: {last_opcode} f_lasti: {frame.f_lasti} trace: {trace}")
+        print(f"handle_return typ: {typ} last_opc: {last_opcode} nd2_opc: {nd2_opc} f_lasti: {frame.f_lasti} trace: {trace}")
+        import rich
+        rich.inspect(frame)
         if trace is None:
             return
         elif last_opcode in YIELD_OPCODES:
