@@ -286,10 +286,11 @@ class CallTracer:
     def __call__(self, frame: FrameType, event: str, arg: Any) -> "CallTracer":
         code = frame.f_code
         print(f"call frame: {frame} event: {event} arg: {arg}")
-        if sys.version_info >= (3, 13):
-            dis.dis(code, adaptive=False, show_offsets=True)
-        else:
-            dis.dis(code, adaptive=False)
+        dis.dis(code)
+        # if sys.version_info >= (3, 13):
+        #     dis.dis(code, adaptive=False, show_offsets=True)
+        # else:
+        #     dis.dis(code, adaptive=False)
         if (
             event not in SUPPORTED_EVENTS
             or code.co_name == "trace_types"
