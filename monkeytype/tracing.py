@@ -272,8 +272,6 @@ class CallTracer:
         nd2_opc = frame.f_code.co_code[frame.f_lasti - 2]
         trace = self.traces.get(frame)
         print(f"handle_return typ: {typ} last_opc: {last_opcode} nd2_opc: {nd2_opc} f_lasti: {frame.f_lasti} trace: {trace}")
-        import rich
-        rich.inspect(frame)
         if trace is None:
             return
         elif last_opcode in YIELD_OPCODES:
