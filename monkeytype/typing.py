@@ -144,7 +144,7 @@ class TypeRewriterNuevo:
         return a * b
 
     @property
-    def registry(self) -> MappingProxyType[NamePath, AnnotatedMethodInfo]:
+    def registry(self) -> types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
 
 
