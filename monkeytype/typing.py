@@ -58,8 +58,6 @@ DUMMY_TYPED_DICT_NAME = "DUMMY_NAME"
 DUMMY_REQUIRED_TYPED_DICT_NAME = "REQUIRED_TYPED_DICT_NAME"
 DUMMY_OPTIONAL_TYPED_DICT_NAME = "OPTIONAL_TYPED_DICT_NAME"
 
-if not TYPE_CHECKING:
-    from rich import print
 
 _T = TypeVar("_T")
 _F = TypeVar("_F", bound=Callable[..., Any])
