@@ -445,19 +445,24 @@ class GenericTypeRewriter(Generic[T], ABC):
             )
         return self.make_container_type(self.rewrite_container_type(cls), elems)
 
-    def rewrite_Dict(self, dct):
+    @rewriter("typing", "Dict")
+    def rewrite_Dict(self, dct, meta: AMI = AMIS):
         return self._rewrite_container(Dict, dct)
 
-    def rewrite_List(self, lst):
+    @rewriter("typing", "List")
+    def rewrite_List(self, lst, meta: AMI = AMIS):
         return self._rewrite_container(List, lst)
 
-    def rewrite_Set(self, st):
+    @rewriter("typing", "Set")
+    def rewrite_Set(self, st, meta: AMI = AMIS):
         return self._rewrite_container(Set, st)
 
-    def rewrite_Tuple(self, tup):
+    @rewriter("typing", "Tuple")
+    def rewrite_Tuple(self, tup, meta: AMI = AMIS):
         return self._rewrite_container(Tuple, tup)
 
-    def rewrite_Generator(self, generator):
+    @rewriter("typing", "Generator")
+    def rewrite_Generator(self, generator, meta: AMI = AMIS):
         return self._rewrite_container(Generator, generator)
 
     def rewrite_anonymous_TypedDict(self, typed_dict):
@@ -472,7 +477,8 @@ class GenericTypeRewriter(Generic[T], ABC):
             },
         )
 
-    def rewrite_TypedDict(self, typed_dict):
+    @rewriter("typing_extensions", "TypedDict")
+    def rewrite_TypedDict(self, typed_dict, meta: AMI = AMIS):
         if is_anonymous_typed_dict(typed_dict):
             return self.rewrite_anonymous_TypedDict(typed_dict)
         return self.make_builtin_typed_dict(
@@ -666,11 +672,12 @@ class NoOpRewriter(TypeRewriter):
 class RewriteGenerator(TypeRewriter):
     """Returns an Iterator, if the send_type and return_type of a Generator is None"""
 
-    def rewrite_Generator(self, typ):
-        args = typ.__args__
+    @rewriter("typing", "Generator")
+    def rewrite_Generator(self, generator, meta: AMI = AMIS):
+        args = generator.__args__
         if args[1] is NoneType and args[2] is NoneType:
             return Iterator[args[0]]
-        return typ
+        return generator
 
 
 class RewriteMostSpecificCommonBase(TypeRewriter):
