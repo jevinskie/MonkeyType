@@ -93,6 +93,12 @@ def dotted_getattr(obj: Any, path: str) -> Any:
     return obj
 
 
+def resolve_namepath(np: NamePath) -> ResolvedNamePath:
+    mod = importlib.import_module(np.module)
+    val = dotted_getattr(mod, np.qualname)
+    return ResolvedNamePath(np, mod, val)
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _rnp: ResolvedNamePath
     _n: str
@@ -102,9 +108,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     # FIXME: Need weakref?
 
     def __init__(self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath) -> None:
-        mod = importlib.import_module(namepath.module)
-        val = dotted_getattr(mod, namepath.qualname)
-        self._rnp = ResolvedNamePath(namepath, mod, val)
+        self._rnp = resolve_namepath(namepath)
         self._f = func
 
     @overload
@@ -118,6 +122,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
             return self._fmeta
         p = functools.partial(self._f.__get__(obj, cls), meta=self.as_ntuple())
         return cast(Callable[_P, _R_co], p)
+
+    def __func__(self) -> Callable[Concatenate[_T, _P], _R_co]:
+        return self._f
 
     def __set_name__(self, obj: Any, name: str) -> None:
         self._n = name
@@ -153,17 +160,17 @@ class TypeRewriterNuevo:
         self._infos_ro = types.MappingProxyType(self._infos)
 
     @rewriter("typing", "Union")
-    def fancy(self, a: int, b: int) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} registry: {self.registry}")
+    def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a + b
 
     @rewriter("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} registry: {self.registry}")
+    def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
+        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a * b
 
     @property
-    def registry(self) -> types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
+    def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
 
 
