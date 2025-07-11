@@ -416,7 +416,9 @@ class GenericTypeRewriter(Generic[T], ABC):
     def rewrite_container_type(self, container_type): ...
 
     @abstractmethod
-    def rewrite_malformed_container(self, container): ...
+    def rewrite_malformed_container(self, container):
+        raise RuntimeError("rewrite_malformed_container ABC is banned")
+
 
     @abstractmethod
     def rewrite_type_variable(self, type_variable): ...
@@ -489,7 +491,8 @@ class GenericTypeRewriter(Generic[T], ABC):
         elif is_generic(typ):
             typname = name_of_generic(typ)
         else:
-            typname = getattr(typ, "__name__", None)
+            # typname = getattr(typ, "__name__", None)
+            raise TypeError(f"Unknown type: {typ}")
         rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         if rewriter:
             return rewriter(typ)
@@ -516,6 +519,7 @@ class TypeRewriter(GenericTypeRewriter[type]):
         return container_type
 
     def rewrite_malformed_container(self, container):
+        raise RuntimeError("rewrite_malformed_container is banned")
         return container
 
     def rewrite_type_variable(self, type_variable):
