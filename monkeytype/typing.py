@@ -491,19 +491,21 @@ class GenericTypeRewriter(Generic[T], ABC):
 
     def rewrite(self, typ):
         if is_any(typ):
-            typname = "Any"
+            np = get_namepath(Any)
         elif is_union(typ):
-            typname = "Union"
+            np = get_namepath(Union)
         elif is_typed_dict(typ):
-            typname = "TypedDict"
+            np = get_namepath(TypedDict)
         elif is_generic(typ):
-            typname = name_of_generic(typ)
+            np = get_namepath(typ)
         else:
             # typname = getattr(typ, "__name__", None)
-            raise TypeError(f"Unknown type: {typ}")
-        rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
+            # raise TypeError(f"Unknown type: {typ}")
+            return self.generic_rewrite(typ)
+        # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
+        rewriter = self.registry.get(np, default=None)
         if rewriter:
-            return rewriter(typ)
+            return rewriter.method(typ)
         if isinstance(typ, TypeVar):
             return self.rewrite_type_variable(typ)
         return self.generic_rewrite(typ)
