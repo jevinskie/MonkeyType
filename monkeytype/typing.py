@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import functools
+import importlib
 import inspect
 import types
 from abc import ABC, abstractmethod
@@ -70,8 +71,14 @@ class NamePath(NamedTuple):
     qualname: str
 
 
-class AnnotatedMethodInfo(NamedTuple):
+class ResolvedNamePath(NamedTuple):
     namepath: NamePath
+    module: types.ModuleType
+    value: Any
+
+
+class AnnotatedMethodInfo(NamedTuple):
+    resolved: ResolvedNamePath
     name: str
     method: types.MethodType
 
@@ -80,8 +87,14 @@ AMI = AnnotatedMethodInfo
 AMIS = cast(AnnotatedMethodInfo, object())
 
 
+def dotted_getattr(obj: Any, path: str) -> Any:
+    for part in path.split("."):
+        obj = getattr(obj, part)
+    return obj
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
-    _np: NamePath
+    _rnp: ResolvedNamePath
     _n: str
     _f: Callable[Concatenate[_T, _P], _R_co]
     _fmeta: Callable[Concatenate[_T, _P], _R_co]
@@ -89,7 +102,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     # FIXME: Need weakref?
 
     def __init__(self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath) -> None:
-        self._np = namepath
+        mod = importlib.import_module(namepath.module)
+        val = dotted_getattr(mod, namepath.qualname)
+        self._rnp = ResolvedNamePath(namepath, mod, val)
         self._f = func
 
     @overload
@@ -111,13 +126,13 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         if not hasattr(obj, "_infos"):
             setattr(obj, "_infos", {})
         nt = self.as_ntuple()
-        obj._infos[self._np] = nt
+        obj._infos[self._rnp.namepath] = nt
         # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
         p = functools.partial(self._f, meta=nt)  # type: ignore
         self._fmeta = cast(Callable[Concatenate[_T, _P], _R_co], p)
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
-        return AnnotatedMethodInfo(self._np, self._n, cast(types.MethodType, self))
+        return AnnotatedMethodInfo(self._rnp, self._n, cast(types.MethodType, self))
 
 
 class rewriter:
