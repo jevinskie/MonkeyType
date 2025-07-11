@@ -76,16 +76,19 @@ class AnnotatedMethodInfo(NamedTuple):
     method: types.MethodType
 
 
+AMI = AnnotatedMethodInfo
+AMIS = cast(AnnotatedMethodInfo, object())
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _np: NamePath
     _n: str
     _f: Callable[Concatenate[_T, _P], _R_co]
+    _fmeta: Callable[Concatenate[_T, _P], _R_co]
 
     # FIXME: Need weakref?
 
-    def __init__(
-        self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath
-    ) -> None:
+    def __init__(self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath) -> None:
         self._np = namepath
         self._f = func
 
@@ -97,8 +100,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         self, obj: _T | None, cls: type[_T] | None = None, /
     ) -> Callable[Concatenate[_T, _P], _R_co] | Callable[_P, _R_co]:
         if obj is None:
-            return self._f
-        return cast(Callable[_P, _R_co], self._f.__get__(obj, cls))
+            return self._fmeta
+        p = functools.partial(self._f.__get__(obj, cls), meta=self.as_ntuple())
+        return cast(Callable[_P, _R_co], p)
 
     def __set_name__(self, obj: Any, name: str) -> None:
         self._n = name
@@ -106,7 +110,11 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
             raise ValueError(f"None obj? {obj}")
         if not hasattr(obj, "_infos"):
             setattr(obj, "_infos", {})
-        obj._infos[self._np] = self.as_ntuple()
+        nt = self.as_ntuple()
+        obj._infos[self._np] = nt
+        # Argument "meta" has incompatible type "AnnotatedMethodInfo"; expected "_P.kwargs"
+        p = functools.partial(self._f, meta=nt)  # type: ignore
+        self._fmeta = cast(Callable[Concatenate[_T, _P], _R_co], p)
 
     def as_ntuple(self) -> AnnotatedMethodInfo:
         return AnnotatedMethodInfo(self._np, self._n, cast(types.MethodType, self))
