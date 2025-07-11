@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 import json
 import logging
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, TypeVar, cast
 
 from typing_extensions import TypedDict
 
@@ -93,9 +93,9 @@ _HIDDEN_BUILTIN_TYPES: Dict[str, type] = {
 
 
 def typed_dict_from_dict(d: TypeDict) -> type:
-    return TypedDict(
+    return cast(type, TypedDict(
         d["qualname"], {k: type_from_dict(v) for k, v in d["elem_types"].items()}
-    )
+    )) # type: ignore
 
 
 def type_from_dict(d: TypeDict) -> type:
