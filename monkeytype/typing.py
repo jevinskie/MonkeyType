@@ -99,6 +99,14 @@ def resolve_namepath(np: NamePath) -> ResolvedNamePath:
     return ResolvedNamePath(np, mod, val)
 
 
+def get_namepath(val: Any) -> NamePath:
+    if not hasattr(val, "__module__"):
+        raise ValueError(f"Can't get NamePath: __module__ missing from val: {val}")
+    if not hasattr(val, "__qualname__"):
+        raise ValueError(f"Can't get NamePath: __qualname__ missing from val: {val}")
+    return NamePath(val.__module__, val.__qualname__)
+
+
 class AnnotatedMethod(Generic[_T, _P, _R_co]):
     _rnp: ResolvedNamePath
     _n: str
