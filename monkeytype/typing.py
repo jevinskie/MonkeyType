@@ -4,7 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from __future__ import annotations
+# from __future__ import annotations
 
 import functools
 import importlib
@@ -490,6 +490,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ):
+        r = None
         if is_any(typ):
             np = get_namepath(Any)
         elif is_union(typ):
@@ -501,14 +502,22 @@ class GenericTypeRewriter(Generic[T], ABC):
         else:
             # typname = getattr(typ, "__name__", None)
             # raise TypeError(f"Unknown type: {typ}")
-            return self.generic_rewrite(typ)
+            r = self.generic_rewrite(typ)
+            print(f"rewrite({typ}) generic => {r}")
+            return r
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
-            return rewriter.method(typ)
+            r = rewriter.method(typ)
+            print(f"rewrite({typ}) method => {r}")
+            return r
         if isinstance(typ, TypeVar):
-            return self.rewrite_type_variable(typ)
-        return self.generic_rewrite(typ)
+            r = self.rewrite_type_variable(typ)
+            print(f"rewrite({typ}) typevar => {r}")
+            return r
+        print(f"rewrite({typ}) generic2 => {r}")
+        r = self.generic_rewrite(typ)
+        return r
 
 
 class TypeRewriter(GenericTypeRewriter[type]):

@@ -95,7 +95,7 @@ _HIDDEN_BUILTIN_TYPES: Dict[str, type] = {
 def typed_dict_from_dict(d: TypeDict) -> type:
     return cast(type, TypedDict(
         d["qualname"], {k: type_from_dict(v) for k, v in d["elem_types"].items()}
-    )) # type: ignore
+    ))
 
 
 def type_from_dict(d: TypeDict) -> type:
