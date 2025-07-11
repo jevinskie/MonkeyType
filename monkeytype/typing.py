@@ -157,6 +157,8 @@ class TypeRewriterNuevo:
     _infos_ro: types.MappingProxyType[NamePath, AnnotatedMethodInfo]
 
     def __init__(self) -> None:
+        if not hasattr(self, "_infos"):
+            self._infos = {}
         self._infos_ro = types.MappingProxyType(self._infos)
 
     @rewriter("typing", "Union")
@@ -382,6 +384,19 @@ T = TypeVar("T")
 
 
 class GenericTypeRewriter(Generic[T], ABC):
+    _infos: dict[NamePath, AnnotatedMethodInfo]
+    _infos_ro: types.MappingProxyType[NamePath, AnnotatedMethodInfo]
+
+    def __init__(self) -> None:
+        super().__init__()
+        if not hasattr(self, "_infos"):
+            self._infos = {}
+        self._infos_ro = types.MappingProxyType(self._infos)
+
+    @property
+    def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
+        return self._infos_ro
+
     @abstractmethod
     def make_builtin_tuple(self, elements): ...
 
@@ -459,7 +474,9 @@ class GenericTypeRewriter(Generic[T], ABC):
             total=typed_dict.__total__,
         )
 
-    def rewrite_Union(self, union):
+    @rewriter("typing", "Union")
+    def rewrite_Union(self, union, meta: AMI = AMIS) -> Any:
+        print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ):
@@ -523,11 +540,14 @@ class RemoveEmptyContainers(TypeRewriter):
     removing the empty container.
     """
 
+
     def _is_empty(self, typ):
         args = getattr(typ, "__args__", [])
         return args and all(is_any(e) for e in args)
 
-    def rewrite_Union(self, union):
+    @rewriter("typing", "Union")
+    def rewrite_Union(self, union, meta: AMI = AMIS):
+        print(f"RemoveEmptyContainers.rewrite_Union() self: {self} union: {union} meta: {meta}")
         elems = tuple(self.rewrite(e) for e in union.__args__ if not self._is_empty(e))
         if elems:
             return Union[elems]
@@ -537,7 +557,10 @@ class RemoveEmptyContainers(TypeRewriter):
 class RewriteConfigDict(TypeRewriter):
     """Union[Dict[K, V1], ..., Dict[K, VN]] -> Dict[K, Union[V1, ..., VN]]"""
 
-    def rewrite_Union(self, union):
+
+    @rewriter("typing", "Union")
+    def rewrite_Union(self, union, meta: AMI = AMIS):
+        print(f"RewriteConfigDict.rewrite_Union() self: {self} union: {union} meta: {meta}")
         key_type = None
         value_types = []
         for e in union.__args__:
@@ -568,7 +591,9 @@ class RewriteLargeUnion(TypeRewriter):
                 return None
         return Tuple[value_type, ...]
 
-    def rewrite_Union(self, union):
+    @rewriter("typing", "Union")
+    def rewrite_Union(self, union, meta: AMI = AMIS):
+        print(f"RewriteLargeUnion.rewrite_Union() self: {self} union: {union} meta: {meta}")
         if len(union.__args__) <= self.max_union_len:
             return union
 
@@ -677,7 +702,9 @@ class RewriteMostSpecificCommonBase(TypeRewriter):
 
         return merged_bases
 
-    def rewrite_Union(self, union):
+    @rewriter("typing", "Union")
+    def rewrite_Union(self, union, meta: AMI = AMIS):
+        print(f"RewriteMostSpecificCommonBase.rewrite_Union() self: {self} union: {union} meta: {meta}")
         """
         Rewrite the union if possible, if no meaningful rewrite is possible,
         return the original union.
