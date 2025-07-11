@@ -84,9 +84,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     # FIXME: Need weakref?
 
     def __init__(
-        self, func: Callable[Concatenate[_T, _P], _R_co], module: str, qualname: str
+        self, func: Callable[Concatenate[_T, _P], _R_co], namepath: NamePath
     ) -> None:
-        self._np = NamePath(module, qualname)
+        self._np = namepath
         self._f = func
 
     @overload
@@ -113,15 +113,13 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
 
 
 class rewriter:
-    _mod: str
-    _qn: str
+    _np: NamePath
 
     def __init__(self, module: str, qualname: str) -> None:
-        self._mod = module
-        self._qn = qualname
+        self._np = NamePath(module, qualname)
 
     def __call__(self, func: _F) -> _F:
-        return cast(_F, AnnotatedMethod(func, self._mod, self._qn))
+        return cast(_F, AnnotatedMethod(func, self._np))
 
 
 class TypeRewriterNuevo:
