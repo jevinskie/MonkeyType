@@ -503,7 +503,7 @@ class GenericTypeRewriter(Generic[T], ABC):
             # raise TypeError(f"Unknown type: {typ}")
             return self.generic_rewrite(typ)
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
-        rewriter = self.registry.get(np, default=None)
+        rewriter = self.registry.get(np)
         if rewriter:
             return rewriter.method(typ)
         if isinstance(typ, TypeVar):
