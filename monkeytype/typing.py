@@ -495,12 +495,10 @@ class GenericTypeRewriter(Generic[T], ABC):
         elif is_generic(typ):
             np = get_namepath(typ)
         else:
-            # typname = getattr(typ, "__name__", None)
-            raise TypeError(f"Unknown type: {typ}")
+            # raise TypeError(f"Unknown type: {typ}")
             r = self.generic_rewrite(typ)
             print(f"rewrite({typ}) generic2 => {r}")
             return r
-        # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
             print(f"GTR({cstr}).rewrite() rewriter: {rewriter}")
