@@ -394,23 +394,29 @@ class RenderAnnotation(GenericTypeRewriter[str]):
 
 def render_annotation(anno: Any) -> str:
     """Convert an annotation into its stub representation."""
+    print(f"render_annotation(): anno: {anno}")
     orig = anno
     last = anno
-    for i in range(100):
-        anno = RenderAnnotation(top=True).rewrite(anno)
-        print(f"last: {last} anno: {anno}")
+    max_iter = 100
+    for i in range(max_iter):
+        is_last = i == (max_iter - 1)
+        anno = RenderAnnotation(top=is_last).rewrite(anno)
+        print(f"loop[{i}] enter: last: {last} anno: {anno}")
         if last is anno:
             print("last is anno")
             break
-        if is_forward_ref(last) and is_forward_ref(anno) and last.__forward_arg__ == anno.__forward_arg__:
+        if is_forward_ref(last) and is_forward_ref(anno) and last.__forward_arg__ == anno.__forward_arg__:  # type: ignore
             print("is_foward_ref")
             break
         if last == anno:
             print("last == anno")
             break
+        print(f"loop[{i}] exit: last: {last} anno: {anno}")
         last = anno
     else:
+        print("render_annotation for else")
         raise RuntimeError(f"render_annotation too many iterations: orig: {orig} last: {last} anno: {anno}")
+    print("render_annotation for done")
     if not isinstance(anno, str):
         raise TypeError(f"render_annotation result not str: orig: {orig} last: {last} anno: {anno}")
     return anno
