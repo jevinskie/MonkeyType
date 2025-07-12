@@ -379,10 +379,10 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         print(f"RAN.rewrite() typ: {typ}")
         cstr = caller if caller is not None else ""
         rendered = super().rewrite(typ, caller=f"RAN({cstr}).rewrite")
-        if getattr(typ, "__module__", None) == "typing":
-            rendered = rendered.replace("typing.", "")
+        #if getattr(typ, "__module__", None) == "typing":
+        #    rendered = rendered.replace("typing.", "")
         # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
-        rendered = rendered.replace("NoneType", "None")
+        #rendered = rendered.replace("NoneType", "None")
         return rendered
 
 
