@@ -388,8 +388,8 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         rendered = super().rewrite(typ, caller=callstr)
 
         # Desirable?
-        # if not isinstance(rendered, str):
-        #     raise TypeError("RenderAnnotation.rewrite super result not string")
+        if self.top and not isinstance(rendered, str):
+            raise TypeError(f"RenderAnnotation.rewrite super result non-str: ty: {type(rendered)} rendered: {rendered}")
 
         # Probably not needed:
         # if isinstance(rendered, type):
