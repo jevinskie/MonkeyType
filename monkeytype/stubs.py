@@ -379,17 +379,19 @@ class RenderAnnotation(GenericTypeRewriter[str]):
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
 
-    def rewrite(self, typ: type) -> str:
+    def rewrite(self, typ: type, caller: str | None = None) -> str:
         print(f"RAN.rewrite() typ: {typ}")
-        rendered = super().rewrite(typ)
-        if not isinstance(rendered, str):
-            raise TypeError("RenderAnnotation.rewrite super result not string")
+        cstr = caller if caller is not None else ""
+        rendered = super().rewrite(typ, caller=f"RAN({cstr}).rewrite")
+        #if not isinstance(rendered, str):
+        #    raise TypeError("RenderAnnotation.rewrite super result not string")
         # if isinstance(rendered, type):
         #     rendered = super().rewrite(rendered)
-        if getattr(typ, "__module__", None) == "typing":
-            rendered = rendered.replace("typing.", "")
-        # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
-        rendered = rendered.replace("NoneType", "None")
+        if isinstance(typ, str):
+            if getattr(typ, "__module__", None) == "typing":
+                rendered = rendered.replace("typing.", "")
+            # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
+            rendered = rendered.replace("NoneType", "None")
         return rendered
 
 
