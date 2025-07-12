@@ -492,6 +492,7 @@ class GenericTypeRewriter(Generic[T], ABC):
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"GTR({cstr}).rw() typ: {typ}")
+        print(f"GTR registry: {self.registry}")
         callstr = f"GTR({cstr}).rw()"
         r = None
         if is_any(typ):
