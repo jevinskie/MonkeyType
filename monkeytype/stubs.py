@@ -36,6 +36,8 @@ from monkeytype.compat import (
 )
 from monkeytype.tracing import CallTrace, CallTraceLogger
 from monkeytype.typing import (
+    AMI,
+    AMIS,
     GenericTypeRewriter,
     NoneType,
     NoOpRewriter,
@@ -43,6 +45,7 @@ from monkeytype.typing import (
     field_annotations,
     make_generator,
     make_iterator,
+    rewriter_dec,
     shrink_types,
 )
 from monkeytype.util import get_name_in_module, pascal_case
@@ -371,11 +374,16 @@ class RenderAnnotation(GenericTypeRewriter[str]):
     def make_container_type(self, container_type: str, elements: str) -> str:
         return f"{container_type}[{elements}]"
 
-    def rewrite_Union(self, union: type) -> str:
+    @rewriter_dec("typing", "Union")
+    def rewrite_Union(self, union: type, meta: AMI = AMIS) -> str:
         if _is_optional(union):
             elem_type = _get_optional_elem(union)
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
+
+    # @rewriter_dec("typing", "ForwardRef")
+    # def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
+    #     return fr.__forward_arg__
 
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
@@ -384,6 +392,12 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         rendered = super().rewrite(typ, caller=callstr)
         if self.top and not isinstance(rendered, str):
             raise TypeError(f"RenderAnnotation.rewrite super result non-str: ty: {type(rendered)} rendered: {rendered}")
+
+        # Probably not needed:
+        # if isinstance(rendered, type):
+        #     rendered = super().rewrite(rendered)
+
+        # Needed for now:
         if isinstance(rendered, str):
             if getattr(typ, "__module__", None) == "typing":
                rendered = rendered.removeprefix("typing.")

@@ -5,18 +5,41 @@
 # LICENSE file in the root directory of this source tree.
 
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 
 # The shrink_types and get_type functions construct new types at runtime. Mypy
 # cannot currently type these functions, so the type signatures live here.
 from typing import _Union  # type: ignore[attr-defined]
-from typing import Any, Dict, Generic, Iterable, List, Optional, Set, Tuple, TypeVar
-from types import MappingProxyType
+from typing import Any, Dict, Generic, Iterable, List, NamedTuple, Optional, Set, Tuple, TypeVar, cast
+from types import MappingProxyType, MethodType, ModuleType
 
 NoneType: type = ...
 NotImplementedType: type = ...
 mappingproxy: type = ...
 
 DUMMY_TYPED_DICT_NAME: str = ...
+
+class NamePath(NamedTuple):
+    module: str
+    qualname: str
+
+
+class ResolvedNamePath(NamedTuple):
+    namepath: NamePath
+    module: ModuleType
+    value: Any
+
+
+class AnnotatedMethodInfo(NamedTuple):
+    resolved: ResolvedNamePath
+    name: str
+    method: MethodType
+
+
+def rewriter_dec(module: str, qualname: str) -> Callable[[_F], _F]: ...
+
+AMI = AnnotatedMethodInfo
+AMIS: AnnotatedMethodInfo
 
 def make_typed_dict(
     *,
@@ -34,6 +57,7 @@ def make_iterator(typ: type) -> type: ...
 def make_generator(yield_typ: type, send_typ: type, return_typ: type) -> type: ...
 
 T = TypeVar("T")
+_F = TypeVar("_F", bound=Callable[..., Any])
 
 class GenericTypeRewriter(Generic[T], ABC):
     def __init__(self, top: bool = False): ...
