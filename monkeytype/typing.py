@@ -362,16 +362,22 @@ T = TypeVar("T")
 class GenericTypeRewriter(Generic[T], ABC):
     _infos: dict[NamePath, AnnotatedMethodInfo]
     _infos_ro: types.MappingProxyType[NamePath, AnnotatedMethodInfo]
+    _top: bool
 
-    def __init__(self) -> None:
+    def __init__(self, top: bool = False) -> None:
         super().__init__()
+        self._top = top
         if not hasattr(self, "_infos"):
             self._infos = {}
         self._infos_ro = types.MappingProxyType(self._infos)
 
     @property
-    def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
+    def registry(self) -> types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
+
+    @property
+    def top(self) -> bool:
+        return self._top
 
     @abstractmethod
     def make_builtin_tuple(self, elements): ...
@@ -457,7 +463,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
 
-    def rewrite(self, typ, caller: str | None = None):
+    def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"GTR({cstr}).rewrite() typ: {typ}")
         callstr = f"GTR({cstr}).rewrite()"
@@ -564,8 +570,8 @@ class RewriteConfigDict(TypeRewriter):
 class RewriteLargeUnion(TypeRewriter):
     """Rewrite Union[T1, ..., TN] as Any for large N."""
 
-    def __init__(self, max_union_len: int = 5):
-        super().__init__()
+    def __init__(self, max_union_len: int = 5, top: bool = False):
+        super().__init__(top=top)
         self.max_union_len = max_union_len
 
     def _rewrite_to_tuple(self, union):
@@ -614,11 +620,11 @@ class RewriteAnonymousTypedDictToDict(TypeRewriter):
 
 
 class ChainedRewriter(TypeRewriter):
-    def __init__(self, rewriters: Iterable[TypeRewriter]) -> None:
-        super().__init__()
+    def __init__(self, rewriters: Iterable[TypeRewriter], top: bool = False) -> None:
+        super().__init__(top=top)
         self.rewriters = rewriters
 
-    def rewrite(self, typ, caller: str | None = None):
+    def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"CHN({cstr}).rewrite() typ: {typ}")
         for i, rw in enumerate(self.rewriters):
@@ -629,7 +635,7 @@ class ChainedRewriter(TypeRewriter):
 
 
 class NoOpRewriter(TypeRewriter):
-    def rewrite(self, typ, caller: str | None = None):
+    def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"NOP({cstr}).rewrite() typ: {typ}")
         return typ
@@ -721,9 +727,10 @@ class RewriteMostSpecificCommonBase(TypeRewriter):
 
 DEFAULT_REWRITER = ChainedRewriter(
     (
-        RemoveEmptyContainers(),
-        RewriteConfigDict(),
-        RewriteLargeUnion(),
-        RewriteGenerator(),
-    )
+        RemoveEmptyContainers(top=True),
+        RewriteConfigDict(top=True),
+        RewriteLargeUnion(top=True),
+        RewriteGenerator(top=True),
+    ),
+    top=True,
 )
