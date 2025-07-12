@@ -381,7 +381,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
 
-    def rewrite(self, typ: type, caller: str | None = None) -> str:
+    def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
         print(f"RAN({cstr}).rewrite() typ: {typ}")
         callstr = f"RAN({cstr}).rewrite()"
@@ -398,7 +398,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         # Needed for now:
         if isinstance(typ, str):
             if getattr(typ, "__module__", None) == "typing":
-                rendered = rendered.replace("typing.", "")
+                rendered = rendered.removeprefix("typing.")
             # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
             rendered = rendered.replace("NoneType", "None")
         return rendered
@@ -406,7 +406,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
 
 def render_annotation(anno: Any) -> str:
     """Convert an annotation into its stub representation."""
-    return RenderAnnotation().rewrite(anno)
+    return RenderAnnotation(top=True).rewrite(anno)
 
 
 def render_parameter(param: inspect.Parameter) -> str:
@@ -605,8 +605,8 @@ class ClassStub(Stub):
 class ReplaceTypedDictsWithStubs(TypeRewriter):
     """Replace TypedDicts in a generic type with class stubs and store all the stubs."""
 
-    def __init__(self, class_name_hint: str) -> None:
-        super().__init__()
+    def __init__(self, class_name_hint: str, top: bool = False) -> None:
+        super().__init__(top=top)
         self._class_name_hint = class_name_hint
         self.stubs: List[ClassStub] = []
 
