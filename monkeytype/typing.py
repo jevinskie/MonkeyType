@@ -32,8 +32,8 @@ from typing import (
     Type,
     TypeVar,
     Union,
-    overload,
     cast,
+    overload,
 )
 
 from typing_extensions import TypedDict
@@ -551,7 +551,6 @@ class RemoveEmptyContainers(TypeRewriter):
     Union[] handles the case where there is only a single type left after
     removing the empty container.
     """
-
 
     def _is_empty(self, typ):
         args = getattr(typ, "__args__", [])
