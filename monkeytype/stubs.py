@@ -43,6 +43,9 @@ from monkeytype.typing import (
     make_generator,
     make_iterator,
     shrink_types,
+    rewriter_dec,
+    AMI,
+    AMIS,
 )
 from monkeytype.util import get_name_in_module, pascal_case
 
@@ -362,7 +365,8 @@ class RenderAnnotation(GenericTypeRewriter[str]):
     def make_container_type(self, container_type: str, elements: str) -> str:
         return f"{container_type}[{elements}]"
 
-    def rewrite_Union(self, union: type) -> str:
+    @rewriter_dec("typing", "Union")
+    def rewrite_Union(self, union: type, meta: AMI = AMIS) -> str:
         if _is_optional(union):
             elem_type = _get_optional_elem(union)
             return "Optional[" + self.rewrite(elem_type) + "]"

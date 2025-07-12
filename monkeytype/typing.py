@@ -150,7 +150,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return AnnotatedMethodInfo(self._rnp, self._n, cast(types.MethodType, self))
 
 
-class rewriter:
+class rewriter_dec:
     _np: NamePath
 
     def __init__(self, module: str, qualname: str) -> None:
@@ -169,12 +169,12 @@ class TypeRewriterNuevo:
             self._infos = {}
         self._infos_ro = types.MappingProxyType(self._infos)
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a + b
 
-    @rewriter("pycparser.c_ast", "Union")
+    @rewriter_dec("pycparser.c_ast", "Union")
     def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
         print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
         return a * b
@@ -445,23 +445,23 @@ class GenericTypeRewriter(Generic[T], ABC):
             )
         return self.make_container_type(self.rewrite_container_type(cls), elems)
 
-    @rewriter("typing", "Dict")
+    @rewriter_dec("typing", "Dict")
     def rewrite_Dict(self, dct, meta: AMI = AMIS):
         return self._rewrite_container(Dict, dct)
 
-    @rewriter("typing", "List")
+    @rewriter_dec("typing", "List")
     def rewrite_List(self, lst, meta: AMI = AMIS):
         return self._rewrite_container(List, lst)
 
-    @rewriter("typing", "Set")
+    @rewriter_dec("typing", "Set")
     def rewrite_Set(self, st, meta: AMI = AMIS):
         return self._rewrite_container(Set, st)
 
-    @rewriter("typing", "Tuple")
+    @rewriter_dec("typing", "Tuple")
     def rewrite_Tuple(self, tup, meta: AMI = AMIS):
         return self._rewrite_container(Tuple, tup)
 
-    @rewriter("typing", "Generator")
+    @rewriter_dec("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
         return self._rewrite_container(Generator, generator)
 
@@ -477,7 +477,7 @@ class GenericTypeRewriter(Generic[T], ABC):
             },
         )
 
-    @rewriter("typing_extensions", "TypedDict")
+    @rewriter_dec("typing_extensions", "TypedDict")
     def rewrite_TypedDict(self, typed_dict, meta: AMI = AMIS):
         if is_anonymous_typed_dict(typed_dict):
             return self.rewrite_anonymous_TypedDict(typed_dict)
@@ -490,7 +490,7 @@ class GenericTypeRewriter(Generic[T], ABC):
             total=typed_dict.__total__,
         )
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS) -> Any:
         print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
@@ -514,7 +514,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
-            r = rewriter.method(typ)
+            r = rewriter.method.__func__()(rewriter, typ)
             print(f"rewrite({typ}) method => {r}")
             return r
         if isinstance(typ, TypeVar):
@@ -574,7 +574,7 @@ class RemoveEmptyContainers(TypeRewriter):
         args = getattr(typ, "__args__", [])
         return args and all(is_any(e) for e in args)
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
         print(f"RemoveEmptyContainers.rewrite_Union() self: {self} union: {union} meta: {meta}")
         elems = tuple(self.rewrite(e) for e in union.__args__ if not self._is_empty(e))
@@ -587,7 +587,7 @@ class RewriteConfigDict(TypeRewriter):
     """Union[Dict[K, V1], ..., Dict[K, VN]] -> Dict[K, Union[V1, ..., VN]]"""
 
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
         print(f"RewriteConfigDict.rewrite_Union() self: {self} union: {union} meta: {meta}")
         key_type = None
@@ -620,7 +620,7 @@ class RewriteLargeUnion(TypeRewriter):
                 return None
         return Tuple[value_type, ...]
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
         print(f"RewriteLargeUnion.rewrite_Union() self: {self} union: {union} meta: {meta}")
         if len(union.__args__) <= self.max_union_len:
@@ -672,7 +672,7 @@ class NoOpRewriter(TypeRewriter):
 class RewriteGenerator(TypeRewriter):
     """Returns an Iterator, if the send_type and return_type of a Generator is None"""
 
-    @rewriter("typing", "Generator")
+    @rewriter_dec("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
         args = generator.__args__
         if args[1] is NoneType and args[2] is NoneType:
@@ -732,7 +732,7 @@ class RewriteMostSpecificCommonBase(TypeRewriter):
 
         return merged_bases
 
-    @rewriter("typing", "Union")
+    @rewriter_dec("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
         print(f"RewriteMostSpecificCommonBase.rewrite_Union() self: {self} union: {union} meta: {meta}")
         """
