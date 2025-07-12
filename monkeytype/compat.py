@@ -67,7 +67,9 @@ def name_of_generic(typ: Any) -> str:
 
 
 def is_forward_ref(typ: Any) -> bool:
-    return isinstance(typ, ForwardRef)
+    r = isinstance(typ, ForwardRef)
+    print(f"is_forward_ref({typ}) => {r}")
+    return r
 
 
 def make_forward_ref(s: str) -> ForwardRef:
