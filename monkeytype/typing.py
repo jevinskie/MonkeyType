@@ -549,7 +549,6 @@ class RemoveEmptyContainers(TypeRewriter):
     removing the empty container.
     """
 
-
     def _is_empty(self, typ):
         args = getattr(typ, "__args__", [])
         return args and all(is_any(e) for e in args)
