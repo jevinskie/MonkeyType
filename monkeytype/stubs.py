@@ -381,13 +381,15 @@ class RenderAnnotation(GenericTypeRewriter[str]):
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
 
-    # @rewriter_dec("typing", "ForwardRef")
-    # def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
-    #     return fr.__forward_arg__
+    @rewriter_dec("typing", "ForwardRef")
+    def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
+        print(f"RA.rewrite_FR fr: {fr}")
+        return fr.__forward_arg__
 
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
         print(f"RAN({cstr}).rw() typ: {typ}")
+        print(f"RAN registry: {self.registry}")
         callstr = f"RAN({cstr}).rw()"
         rendered = super().rewrite(typ, caller=callstr)
         if self.top and not isinstance(rendered, str):
