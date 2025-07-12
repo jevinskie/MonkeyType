@@ -374,6 +374,10 @@ class RenderAnnotation(GenericTypeRewriter[str]):
 
     def rewrite(self, typ: type) -> str:
         rendered = super().rewrite(typ)
+        if not isinstance(rendered, str):
+            raise TypeError("RenderAnnotation.rewrite super result not string")
+        # if isinstance(rendered, type):
+        #     rendered = super().rewrite(rendered)
         if getattr(typ, "__module__", None) == "typing":
             rendered = rendered.replace("typing.", "")
         # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace

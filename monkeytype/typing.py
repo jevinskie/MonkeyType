@@ -160,29 +160,6 @@ class rewriter_dec:
         return cast(_F, AnnotatedMethod(func, self._np))
 
 
-class TypeRewriterNuevo:
-    _infos: dict[NamePath, AnnotatedMethodInfo]
-    _infos_ro: types.MappingProxyType[NamePath, AnnotatedMethodInfo]
-
-    def __init__(self) -> None:
-        if not hasattr(self, "_infos"):
-            self._infos = {}
-        self._infos_ro = types.MappingProxyType(self._infos)
-
-    @rewriter_dec("typing", "Union")
-    def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
-        return a + b
-
-    @rewriter_dec("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
-        return a * b
-
-    @property
-    def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
-        return self._infos_ro
-
 
 # Functions like shrink_types and get_type construct new types at runtime.
 # Mypy cannot currently type these functions, so the type signatures for this
