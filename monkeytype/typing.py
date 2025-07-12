@@ -482,8 +482,9 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ, caller: str | None = None):
-        callstr = f" caller: {caller}" if caller is not None else ""
-        print(f"GTR.rewrite() typ: {typ}{callstr}")
+        cstr = caller if caller is not None else ""
+        print(f"GTR({cstr}).rewrite() typ: {typ}")
+        callstr = f"GTR({cstr}).rewrite()"
         r = None
         if is_any(typ):
             np = get_namepath(Any)
@@ -502,16 +503,16 @@ class GenericTypeRewriter(Generic[T], ABC):
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
-            print(f"rewriter: {rewriter}")
+            print(f"GTR({cstr}).rewrite() rewriter: {rewriter}")
             r = self._call_annotated_method(rewriter, typ)
-            print(f"rewrite({typ}) decorator => {r}")
+            print(f"GTR({cstr}).rewrite() typ: {typ} decorator => {r}")
             return r
         if isinstance(typ, TypeVar):
             r = self.rewrite_type_variable(typ)
-            print(f"rewrite({typ}) typevar => {r}")
+            print(f"GTR({cstr}).rewrite() typ: {typ} typevar => {r}")
             return r
-        print(f"rewrite({typ}) generic => {r}")
-        r = self.generic_rewrite(typ)
+        r = self.generic_rewrite(typ, caller=callstr)
+        print(f"GTR({cstr}).rewrite() typ: {typ} generic => {r}")
         return r
 
 
@@ -526,7 +527,7 @@ class TypeRewriter(GenericTypeRewriter[type]):
     def make_builtin_typed_dict(self, name, annotations, total):
         return TypedDict(name, annotations, total=total)
 
-    def generic_rewrite(self, typ):
+    def generic_rewrite(self, typ, caller: str | None = None):
         return typ
 
     def rewrite_container_type(self, container_type):
@@ -648,11 +649,11 @@ class ChainedRewriter(TypeRewriter):
         self.rewriters = rewriters
 
     def rewrite(self, typ, caller: str | None = None):
-        print(f"CHN.rewrite() typ: {typ}")
+        cstr = caller if caller is not None else ""
+        print(f"CHN({cstr}).rewrite() typ: {typ}")
         for i, rw in enumerate(self.rewriters):
-            print(f"CHN.rewrite() rw[{i}] typ: {typ}")
-            cstr = caller if caller is not None else ""
-            callstr = f"CHN({cstr})[{i}].rewrite"
+            print(f"CHN({cstr}).rewrite() rw[{i}] typ: {typ}")
+            callstr = f"CHN({cstr})[{i}].rewrite()"
             typ = rw.rewrite(typ, caller=callstr)
         return typ
 
