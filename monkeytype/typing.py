@@ -405,6 +405,12 @@ class GenericTypeRewriter(Generic[T], ABC):
     def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
         return self._infos_ro
 
+    def _call_annotated_method(
+        self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
+    ) -> Any:
+        m = method_info.method.__get__(self, type(self))  # type: ignore
+        return m(*args, **kwargs)
+
     @abstractmethod
     def make_builtin_tuple(self, elements): ...
 
@@ -495,12 +501,6 @@ class GenericTypeRewriter(Generic[T], ABC):
         print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
 
-    def _call_as_method(
-        self, method_info: AnnotatedMethodInfo, /, *args: Any, **kwargs: Any
-    ) -> Any:
-        m = method_info.method.__get__(self, type(self))  # type: ignore
-        return m(*args, **kwargs)
-
     def rewrite(self, typ):
         r = None
         if is_any(typ):
@@ -520,7 +520,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
-            r = self._call_as_method(rewriter, typ)
+            r = self._call_annotated_method(rewriter, typ)
             print(f"rewrite({typ}) method => {r}")
             return r
         if isinstance(typ, TypeVar):
