@@ -874,9 +874,10 @@ class TestStubIndexBuilder:
 
     def test_build_index(self):
         idxb = StubIndexBuilder('tests', max_typed_dict_size=0)
-        idxb.log(CallTrace(untyped_helper, {'x': int, 'y': str}, str))
+        ct = CallTrace(untyped_helper, {'x': int, 'y': str}, str)
+        idxb.log(ct)
         sig = Signature.from_callable(untyped_helper)
-        print(f"sig: {sig} untyped_helper: {untyped_helper}")
+        print(f"ct: {ct} sig: {sig} untyped_helper: {untyped_helper}")
         sig = sig.replace(
             parameters=[
                 Parameter('x', Parameter.POSITIONAL_OR_KEYWORD, annotation=int),
