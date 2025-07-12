@@ -665,7 +665,7 @@ class TestTypeRewriter:
         ],
     )
     def test_rewrite_TypedDict(self, typ, expected):
-        rewritten = RewriteListToInt().rewrite(typ)
+        rewritten = RewriteListToInt(top=True).rewrite(typ)
         assert rewritten == expected
 
 
@@ -687,7 +687,7 @@ class TestRemoveEmptyContainers:
         ],
     )
     def test_rewrite(self, typ, expected):
-        rewritten = RemoveEmptyContainers().rewrite(typ)
+        rewritten = RemoveEmptyContainers(top=True).rewrite(typ)
         assert rewritten == expected
 
 
@@ -717,7 +717,7 @@ class TestRewriteConfigDict:
         ],
     )
     def test_rewrite(self, typ, expected):
-        rewritten = RewriteConfigDict().rewrite(typ)
+        rewritten = RewriteConfigDict(top=True).rewrite(typ)
         assert rewritten == expected
 
 
@@ -762,7 +762,7 @@ class TestRewriteMostSpecificCommonBase:
 
         ])
     def test_rewrite(self, typ, expected):
-        rewritten = RewriteMostSpecificCommonBase().rewrite(typ)
+        rewritten = RewriteMostSpecificCommonBase(top=True).rewrite(typ)
         assert rewritten == expected
 
     def test_multiple_bases(self):
@@ -780,7 +780,7 @@ class TestRewriteMostSpecificCommonBase:
             pass
 
         typ = Union[FirstDerived, SecondDerived]
-        assert RewriteMostSpecificCommonBase().rewrite(typ) == typ
+        assert RewriteMostSpecificCommonBase(top=True).rewrite(typ) == typ
 
     def test_multiple_bases_nontrivial(self):
         class Base1:
@@ -802,7 +802,7 @@ class TestRewriteMostSpecificCommonBase:
             pass
 
         typ = Union[FirstDerived1, FirstDerived2]
-        rewritten = RewriteMostSpecificCommonBase().rewrite(typ)
+        rewritten = RewriteMostSpecificCommonBase(top=True).rewrite(typ)
         assert rewritten == FirstDerived
 
 
@@ -871,7 +871,7 @@ class TestRewriteLargeUnion:
         ],
     )
     def test_rewrite(self, typ, expected):
-        rewritten = RewriteLargeUnion(2).rewrite(typ)
+        rewritten = RewriteLargeUnion(2, top=True).rewrite(typ)
         assert rewritten == expected
 
 
@@ -890,7 +890,7 @@ class TestRewriteGenerator:
         ],
     )
     def test_rewrite(self, typ, expected):
-        rewritten = RewriteGenerator().rewrite(typ)
+        rewritten = RewriteGenerator(top=True).rewrite(typ)
         assert rewritten == expected
 
 
@@ -907,5 +907,5 @@ class TestRewriteAnonymousTypedDictToDict:
         ],
     )
     def test_rewrite(self, typ, expected):
-        rewritten = RewriteAnonymousTypedDictToDict().rewrite(typ)
+        rewritten = RewriteAnonymousTypedDictToDict(top=True).rewrite(typ)
         assert rewritten == expected
