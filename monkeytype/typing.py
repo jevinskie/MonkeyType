@@ -497,7 +497,7 @@ class GenericTypeRewriter(Generic[T], ABC):
             print(f"rewrite() rewriter: {rewriter}")
             r = rewriter(typ)
             print(f"rewrite({typ}) orig-dyn => {r}")
-            return rewriter(typ)
+            return r
         if isinstance(typ, TypeVar):
             r = self.rewrite_type_variable(typ)
             print(f"rewrite({typ}) typevar => {r}")
