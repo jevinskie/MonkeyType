@@ -149,6 +149,8 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
     def as_ntuple(self) -> AnnotatedMethodInfo:
         return AnnotatedMethodInfo(self._rnp, self._n, cast(types.MethodType, self))
 
+    def __repr__(self) -> str:
+        return f"<AnnotatedMethod np: {self._rnp.namepath} n: {self._n} f: {self._f} at {id(self):#010x}>"
 
 class rewriter_dec:
     _np: NamePath
@@ -490,15 +492,16 @@ class GenericTypeRewriter(Generic[T], ABC):
             np = get_namepath(typ)
         else:
             # typname = getattr(typ, "__name__", None)
-            # raise TypeError(f"Unknown type: {typ}")
+            raise TypeError(f"Unknown type: {typ}")
             r = self.generic_rewrite(typ)
             print(f"rewrite({typ}) generic => {r}")
             return r
         # rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         rewriter = self.registry.get(np)
         if rewriter:
+            print(f"rewriter: {rewriter}")
             r = self._call_annotated_method(rewriter, typ)
-            print(f"rewrite({typ}) method => {r}")
+            print(f"rewrite({typ}) decorator => {r}")
             return r
         if isinstance(typ, TypeVar):
             r = self.rewrite_type_variable(typ)
