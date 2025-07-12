@@ -632,7 +632,8 @@ class ChainedRewriter(TypeRewriter):
 
     def rewrite(self, typ):
         print(f"CHN.rewrite() typ: {typ}")
-        for rw in self.rewriters:
+        for i, rw in enumerate(self.rewriters):
+            print(f"CHN.rewrite() rw[{i}] typ: {typ}")
             typ = rw.rewrite(typ)
         return typ
 
