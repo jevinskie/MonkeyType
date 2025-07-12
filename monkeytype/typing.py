@@ -652,6 +652,7 @@ class NoOpRewriter(TypeRewriter):
     def rewrite(self, typ, caller: str | None = None):
         cstr = caller if caller is not None else ""
         print(f"NOP({cstr}).rewrite() typ: {typ}")
+        return typ
 
 
 class RewriteGenerator(TypeRewriter):
