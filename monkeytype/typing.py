@@ -152,30 +152,6 @@ class rewriter:
         return cast(_F, AnnotatedMethod(func, self._np))
 
 
-class TypeRewriterNuevo:
-    _infos: dict[NamePath, AnnotatedMethodInfo]
-    _infos_ro: types.MappingProxyType[NamePath, AnnotatedMethodInfo]
-
-    def __init__(self) -> None:
-        if not hasattr(self, "_infos"):
-            self._infos = {}
-        self._infos_ro = types.MappingProxyType(self._infos)
-
-    @rewriter("typing", "Union")
-    def fancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"fancy() self: {self} a: {a} b: {b} meta: {meta}")
-        return a + b
-
-    @rewriter("pycparser.c_ast", "Union")
-    def mancy(self, a: int, b: int, /, meta: AMI = AMIS) -> int:
-        print(f"mancy() self: {self} a: {a} b: {b} meta: {meta}")
-        return a * b
-
-    @property
-    def registry(self) ->types.MappingProxyType[NamePath, AnnotatedMethodInfo]:
-        return self._infos_ro
-
-
 # Functions like shrink_types and get_type construct new types at runtime.
 # Mypy cannot currently type these functions, so the type signatures for this
 # file live in typing.pyi.
@@ -410,7 +386,7 @@ class GenericTypeRewriter(Generic[T], ABC):
     def make_builtin_typed_dict(self, name, annotations, total): ...
 
     @abstractmethod
-    def generic_rewrite(self, typ): ...
+    def generic_rewrite(self, typ, caller: str | None = None): ...
 
     @abstractmethod
     def rewrite_container_type(self, container_type): ...
@@ -480,8 +456,9 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ, caller: str | None = None):
-        callstr = f" caller: {caller}" if caller is not None else ""
-        print(f"GTR.rewrite() typ: {typ}{callstr}")
+        cstr = caller if caller is not None else ""
+        print(f"GTR({cstr}).rewrite() typ: {typ}")
+        callstr = f"GTR({cstr}).rewrite()"
         if is_any(typ):
             typname = "Any"
         elif is_union(typ):
@@ -494,16 +471,16 @@ class GenericTypeRewriter(Generic[T], ABC):
             typname = getattr(typ, "__name__", None)
         rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         if rewriter:
-            print(f"rewrite() rewriter: {rewriter}")
+            print(f"GTR({cstr}).rewrite() rewriter: {rewriter}")
             r = rewriter(typ)
-            print(f"rewrite({typ}) orig-dyn => {r}")
+            print(f"GTR({cstr}).rewrite() typ: {typ} orig-dyn => {r}")
             return r
         if isinstance(typ, TypeVar):
             r = self.rewrite_type_variable(typ)
-            print(f"rewrite({typ}) typevar => {r}")
+            print(f"GTR({cstr}).rewrite() typ: {typ} typevar => {r}")
             return r
-        r = self.generic_rewrite(typ)
-        print(f"rewrite({typ}) generic => {r}")
+        r = self.generic_rewrite(typ, caller=callstr)
+        print(f"GTR({cstr}).rewrite() typ: {typ} generic => {r}")
         return r
 
 
@@ -518,7 +495,7 @@ class TypeRewriter(GenericTypeRewriter[type]):
     def make_builtin_typed_dict(self, name, annotations, total):
         return TypedDict(name, annotations, total=total)
 
-    def generic_rewrite(self, typ):
+    def generic_rewrite(self, typ, caller: str | None = None):
         return typ
 
     def rewrite_container_type(self, container_type):
@@ -638,11 +615,11 @@ class ChainedRewriter(TypeRewriter):
         self.rewriters = rewriters
 
     def rewrite(self, typ, caller: str | None = None):
-        print(f"CHN.rewrite() typ: {typ}")
+        cstr = caller if caller is not None else ""
+        print(f"CHN({cstr}).rewrite() typ: {typ}")
         for i, rw in enumerate(self.rewriters):
-            print(f"CHN.rewrite() rw[{i}] typ: {typ}")
-            cstr = caller if caller is not None else ""
-            callstr = f"CHN({cstr})[{i}].rewrite"
+            print(f"CHN({cstr}).rewrite() rw[{i}] typ: {typ}")
+            callstr = f"CHN({cstr})[{i}].rewrite()"
             typ = rw.rewrite(typ, caller=callstr)
         return typ
 

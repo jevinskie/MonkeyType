@@ -327,7 +327,9 @@ class RenderAnnotation(GenericTypeRewriter[str]):
             f" but was called with name={name}, annotations={annotations}, total={total}."
         )
 
-    def generic_rewrite(self, typ: Any) -> str:
+    def generic_rewrite(self, typ: Any, caller: str | None = None) -> str:
+        cstr = caller if caller is not None else ""
+        print(f"RAN({cstr}).generic_rewrite() typ: {typ}")
         if hasattr(typ, "__supertype__"):
             rendered = str(typ.__name__)
         elif is_forward_ref(typ):
@@ -376,9 +378,10 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ: type, caller: str | None = None) -> str:
-        print(f"RAN.rewrite() typ: {typ}")
         cstr = caller if caller is not None else ""
-        rendered = super().rewrite(typ, caller=f"RAN({cstr}).rewrite")
+        print(f"RAN({cstr}).rewrite() typ: {typ}")
+        callstr = f"RAN({cstr}).rewrite()"
+        rendered = super().rewrite(typ, caller=callstr)
         if isinstance(rendered, str):
             if getattr(typ, "__module__", None) == "typing":
                rendered = rendered.replace("typing.", "")
