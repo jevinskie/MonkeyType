@@ -384,7 +384,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         rendered = super().rewrite(typ, caller=callstr)
         if isinstance(rendered, str):
             if getattr(typ, "__module__", None) == "typing":
-               rendered = rendered.replace("typing.", "")
+               rendered = rendered.removeprefix("typing.")
             # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
             rendered = rendered.replace("NoneType", "None")
         return rendered
