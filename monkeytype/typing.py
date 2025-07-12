@@ -612,6 +612,7 @@ class RewriteAnonymousTypedDictToDict(TypeRewriter):
 
 class ChainedRewriter(TypeRewriter):
     def __init__(self, rewriters: Iterable[TypeRewriter]) -> None:
+        super().__init__()
         self.rewriters = rewriters
 
     def rewrite(self, typ, caller: str | None = None):
