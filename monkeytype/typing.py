@@ -480,6 +480,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ):
+        print(f"GTR.rewrite() typ: {typ}")
         if is_any(typ):
             typname = "Any"
         elif is_union(typ):
@@ -630,6 +631,7 @@ class ChainedRewriter(TypeRewriter):
         self.rewriters = rewriters
 
     def rewrite(self, typ):
+        print(f"CHN.rewrite() typ: {typ}")
         for rw in self.rewriters:
             typ = rw.rewrite(typ)
         return typ
@@ -637,6 +639,7 @@ class ChainedRewriter(TypeRewriter):
 
 class NoOpRewriter(TypeRewriter):
     def rewrite(self, typ):
+        print(f"NOP.rewrite() typ: {typ}")
         return typ
 
 
