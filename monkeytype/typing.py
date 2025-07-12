@@ -465,8 +465,8 @@ class GenericTypeRewriter(Generic[T], ABC):
 
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"GTR({cstr}).rewrite() typ: {typ}")
-        callstr = f"GTR({cstr}).rewrite()"
+        print(f"GTR({cstr}).rw() typ: {typ}")
+        callstr = f"GTR({cstr}).rw()"
         if is_any(typ):
             typname = "Any"
         elif is_union(typ):
@@ -479,16 +479,16 @@ class GenericTypeRewriter(Generic[T], ABC):
             typname = getattr(typ, "__name__", None)
         rewriter = getattr(self, "rewrite_" + typname, None) if typname else None
         if rewriter:
-            print(f"GTR({cstr}).rewrite() rewriter: {rewriter}")
+            print(f"GTR({cstr}).rw() rewriter: {rewriter}")
             r = rewriter(typ)
-            print(f"GTR({cstr}).rewrite() typ: {typ} orig-dyn => {r}")
+            print(f"GTR({cstr}).rw() typ: {typ} orig-dyn => {r}")
             return r
         if isinstance(typ, TypeVar):
             r = self.rewrite_type_variable(typ)
-            print(f"GTR({cstr}).rewrite() typ: {typ} typevar => {r}")
+            print(f"GTR({cstr}).rw() typ: {typ} typevar => {r}")
             return r
         r = self.generic_rewrite(typ, caller=callstr)
-        print(f"GTR({cstr}).rewrite() typ: {typ} generic => {r}")
+        print(f"GTR({cstr}).rw() typ: {typ} generic => {r}")
         return r
 
 
@@ -626,10 +626,10 @@ class ChainedRewriter(TypeRewriter):
 
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"CHN({cstr}).rewrite() typ: {typ}")
+        print(f"CHN({cstr}).rw() typ: {typ}")
         for i, rw in enumerate(self.rewriters):
-            print(f"CHN({cstr}).rewrite() rw[{i}] typ: {typ}")
-            callstr = f"CHN({cstr})[{i}].rewrite()"
+            print(f"CHN({cstr}).rw() rw[{i}] typ: {typ}")
+            callstr = f"CHN({cstr})[{i}].rw()"
             typ = rw.rewrite(typ, caller=callstr)
         return typ
 
@@ -637,7 +637,7 @@ class ChainedRewriter(TypeRewriter):
 class NoOpRewriter(TypeRewriter):
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"NOP({cstr}).rewrite() typ: {typ}")
+        print(f"NOP({cstr}).rw() typ: {typ}")
         return typ
 
 
