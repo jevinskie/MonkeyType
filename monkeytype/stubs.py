@@ -381,6 +381,10 @@ class RenderAnnotation(GenericTypeRewriter[str]):
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
 
+    # @rewriter_dec("typing", "ForwardRef")
+    # def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
+    #     return fr.__forward_arg__
+
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
         print(f"RAN({cstr}).rewrite() typ: {typ}")
@@ -404,7 +408,33 @@ class RenderAnnotation(GenericTypeRewriter[str]):
 
 def render_annotation(anno: Any) -> str:
     """Convert an annotation into its stub representation."""
-    return RenderAnnotation(top=True).rewrite(anno)
+    print(f"render_annotation(): anno: {anno}")
+    orig = anno
+    last = anno
+    max_iter = 100
+    for i in range(max_iter):
+        is_last = i == (max_iter - 1)
+        anno = RenderAnnotation(top=is_last).rewrite(anno)
+        print(f"loop[{i}] enter: last: {last} anno: {anno}")
+        if last is anno:
+            print("last is anno")
+            break
+        if is_forward_ref(last) and is_forward_ref(anno) and last.__forward_arg__ == anno.__forward_arg__:  # type: ignore
+            print("is_foward_ref")
+            break
+        if last == anno:
+            print("last == anno")
+            break
+        print(f"loop[{i}] exit: last: {last} anno: {anno}")
+        last = anno
+    else:
+        print("render_annotation for else")
+        raise RuntimeError(f"render_annotation too many iterations: orig: {orig} last: {last} anno: {anno}")
+    print("render_annotation for done")
+    if not isinstance(anno, str):
+        raise TypeError(f"render_annotation result not str: orig: {orig} last: {last} anno: {anno}")
+    return anno
+
 
 
 def render_parameter(param: inspect.Parameter) -> str:
