@@ -392,13 +392,15 @@ class GenericTypeRewriter(Generic[T], ABC):
     def rewrite_container_type(self, container_type): ...
 
     @abstractmethod
-    def rewrite_malformed_container(self, container): ...
+    def rewrite_malformed_container(self, container):
+        raise RuntimeError("rewrite_malformed_container ABC is banned")
 
     @abstractmethod
     def rewrite_type_variable(self, type_variable): ...
 
     def _rewrite_container(self, cls, container):
         if container.__module__ != "typing":
+            print(f"container: {container} mod: {container.__module__}")
             return self.rewrite_malformed_container(container)
         args = getattr(container, "__args__", None)
         if args is None:
@@ -502,6 +504,7 @@ class TypeRewriter(GenericTypeRewriter[type]):
         return container_type
 
     def rewrite_malformed_container(self, container):
+        raise RuntimeError("rewrite_malformed_container ABC is banned")
         return container
 
     def rewrite_type_variable(self, type_variable):
