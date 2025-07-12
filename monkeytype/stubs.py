@@ -36,6 +36,8 @@ from monkeytype.compat import (
 )
 from monkeytype.tracing import CallTrace, CallTraceLogger
 from monkeytype.typing import (
+    AMI,
+    AMIS,
     GenericTypeRewriter,
     NoneType,
     NoOpRewriter,
@@ -43,10 +45,8 @@ from monkeytype.typing import (
     field_annotations,
     make_generator,
     make_iterator,
-    shrink_types,
     rewriter_dec,
-    AMI,
-    AMIS,
+    shrink_types,
 )
 from monkeytype.util import get_name_in_module, pascal_case
 
@@ -398,7 +398,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         #     rendered = super().rewrite(rendered)
 
         # Needed for now:
-        if isinstance(typ, str):
+        if isinstance(rendered, str):
             if getattr(typ, "__module__", None) == "typing":
                 rendered = rendered.removeprefix("typing.")
             # Temporary hacky workaround for #76 to fix remaining NoneType hints by search-replace
@@ -434,7 +434,6 @@ def render_annotation(anno: Any) -> str:
     if not isinstance(anno, str):
         raise TypeError(f"render_annotation result not str: orig: {orig} last: {last} anno: {anno}")
     return anno
-
 
 
 def render_parameter(param: inspect.Parameter) -> str:

@@ -150,7 +150,9 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return AnnotatedMethodInfo(self._rnp, self._n, cast(types.MethodType, self))
 
     def __repr__(self) -> str:
-        return f"<AnnotatedMethod np: {self._rnp.namepath} n: {self._n} f: {self._f} f_mod: {self._f.__module__} at {id(self):#010x}>"
+        # return f"<AnnotatedMethod n: {getattr(self, '_n', 'n/a')} f: {self._f} f_mod: {self._f.__module__} at {id(self):#010x}>"
+        return f"<AM n: {getattr(self, '_n', 'n/a')}>"
+
 
 class rewriter_dec:
     _np: NamePath
@@ -418,12 +420,12 @@ class GenericTypeRewriter(Generic[T], ABC):
     def rewrite_malformed_container(self, container):
         raise RuntimeError("rewrite_malformed_container ABC is banned")
 
-
     @abstractmethod
     def rewrite_type_variable(self, type_variable): ...
 
     def _rewrite_container(self, cls, container):
         if container.__module__ != "typing":
+            print(f"_rewrite_container() container: {container} mod: {container.__module__}")
             return self.rewrite_malformed_container(container)
         args = getattr(container, "__args__", None)
         if args is None:
