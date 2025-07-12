@@ -150,7 +150,7 @@ class AnnotatedMethod(Generic[_T, _P, _R_co]):
         return AnnotatedMethodInfo(self._rnp, self._n, cast(types.MethodType, self))
 
     def __repr__(self) -> str:
-        return f"<AnnotatedMethod np: {self._rnp.namepath} n: {self._n} f: {self._f} at {id(self):#010x}>"
+        return f"<AnnotatedMethod np: {self._rnp.namepath} n: {self._n} f: {self._f} f_mod: {self._f.__module__} at {id(self):#010x}>"
 
 class rewriter_dec:
     _np: NamePath
@@ -423,6 +423,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         if args is None:
             return self.rewrite_malformed_container(container)
         elif args == ((),):  # special case of empty tuple `Tuple[()]`
+            print(f"this better be a tuple: cls: {cls} container: {container}")
             elems = self.make_builtin_tuple(())
         else:
             elems = self.make_builtin_tuple(
@@ -481,6 +482,7 @@ class GenericTypeRewriter(Generic[T], ABC):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ):
+        print(f"GTR.rewrite() typ: {typ}")
         r = None
         if is_any(typ):
             np = get_namepath(Any)
@@ -645,13 +647,16 @@ class ChainedRewriter(TypeRewriter):
         self.rewriters = rewriters
 
     def rewrite(self, typ):
-        for rw in self.rewriters:
+        print(f"CHN.rewrite() typ: {typ}")
+        for i, rw in enumerate(self.rewriters):
+            print(f"CHN.rewrite() rw[{i}] typ: {typ}")
             typ = rw.rewrite(typ)
         return typ
 
 
 class NoOpRewriter(TypeRewriter):
     def rewrite(self, typ):
+        print(f"NOP.rewrite() typ: {typ}")
         return typ
 
 

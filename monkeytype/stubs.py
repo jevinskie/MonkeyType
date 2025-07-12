@@ -11,6 +11,7 @@ import logging
 import re
 from abc import ABCMeta, abstractmethod
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     DefaultDict,
@@ -48,6 +49,12 @@ from monkeytype.typing import (
     AMIS,
 )
 from monkeytype.util import get_name_in_module, pascal_case
+
+if not TYPE_CHECKING:
+    try:
+        from rich import print
+    except ImportError:
+        pass
 
 logger = logging.getLogger(__name__)
 
@@ -373,6 +380,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
         return self._rewrite_container(Union, union)
 
     def rewrite(self, typ: type) -> str:
+        print(f"RAN.rewrite() typ: {typ}")
         rendered = super().rewrite(typ)
         if not isinstance(rendered, str):
             raise TypeError("RenderAnnotation.rewrite super result not string")
