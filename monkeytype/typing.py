@@ -255,7 +255,7 @@ def shrink_typed_dict_types(typed_dicts: List[type], max_typed_dict_size: int) -
     )
 
 
-def shrink_types(types, max_typed_dict_size):
+def shrink_types(types, max_typed_dict_size, top: bool = False):
     """Return the smallest type equivalent to Union[types].
     If all the types are anonymous TypedDicts, shrink them ourselves.
     Otherwise, recursively turn the anonymous TypedDicts into Dicts.
@@ -280,7 +280,7 @@ def shrink_types(types, max_typed_dict_size):
         return List[annotation]
 
     all_dict_types = tuple(
-        RewriteAnonymousTypedDictToDict().rewrite(typ) for typ in types
+        RewriteAnonymousTypedDictToDict(top=top).rewrite(typ, top=top) for typ in types
     )
     return Union[all_dict_types]
 
@@ -661,7 +661,7 @@ class ChainedRewriter(TypeRewriter):
         for i, rw in enumerate(self.rewriters):
             print(f"CHN({cstr}).rw() rw[{i}] typ: {typ}")
             callstr = f"CHN({cstr})[{i}].rw()"
-            typ = rw.rewrite(typ, caller=callstr)
+            typ = rw.rewrite(typ, caller=callstr, top=top)
         return typ
 
 
