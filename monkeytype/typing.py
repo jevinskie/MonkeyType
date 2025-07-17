@@ -465,15 +465,15 @@ class GenericTypeRewriterBase:
             rewriter = mcls.rewrite_methods().get(namepath, None)
             if rewriter is not None:
                 return rewriter
-        raise KeyError(f"No rewrite method for NP: {namepath} methods: {cls.registry}")
+        raise KeyError(f"No rewrite method for NP: {namepath} cls.np: {get_namepath(cls)} methods: {cls.registry()}")
 
     @property
     def top(self) -> bool:
         return self._top
 
-    @property
-    def registry(self) -> MappingProxyType[type, list[AnnotatedMethodInfo]]:
-        return self._namespaces_ro
+    @classmethod
+    def registry(cls) -> MappingProxyType[type, list[AnnotatedMethodInfo]]:
+        return cls._namespaces_ro
 
 
 class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):

@@ -393,11 +393,12 @@ class RenderAnnotation(GenericTypeRewriter):
 
     # FIXME: need (internal) type aliases, this should
     # also handle collections.abc.Iterable
-    # @register_rewrite("typing", "Iterable")
-    # def rewrite_Any(self, iterable, meta: AMI = AMIS):
-    #     print(f"RA.rewrite_Iterable iterable: {iterable}")
-    #     # return str(iterable)
-    #     return "Iterable"
+    @register_rewrite("typing", "Iterable")
+    def rewrite_Any(self, iterable, meta: AMI = AMIS):
+        print(f"RA.rewrite_Iterable iterable: {iterable}")
+        # FIXME: rewrite to use str()
+        return str(iterable)
+        # return "Iterable"
 
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
