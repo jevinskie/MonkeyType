@@ -573,6 +573,8 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
         cstr = caller if caller is not None else ""
         print(f"GTR({cstr}).rw() typ: {typ}")
         print(f"GTR() registry: id: {id(self.registry):#010x} reg: {self.registry}")
+        if isinstance(typ, TypeVar):
+            print(f"GTR({cstr}).rw() typ: {typ} TYPEVAR TYPEVAR TYPEVAR TypeVar found!")
         callstr = f"GTR({cstr}).rw()"
         r = None
         if is_any(typ):
@@ -583,6 +585,11 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
             np = get_namepath(TypedDict)
         elif is_generic(typ):
             np = get_namepath(typ)
+        elif isinstance(typ, TypeVar):
+            # NOTE: this used to be called below the call to _call_annotated_method
+            r = self.rewrite_type_variable(typ)
+            print(f"GTR({cstr}).rw() typ: {typ} typevar22 => {r}")
+            return r
         else:
             # raise TypeError(f"Unknown type: {typ}")
             r = self.generic_rewrite(typ)
@@ -593,10 +600,6 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
             print(f"GTR({cstr}).rw() rewriter: {rewriter}")
             r = self._call_annotated_method(rewriter, typ)
             print(f"GTR({cstr}).rw() typ: {typ} decorator => {r}")
-            return r
-        if isinstance(typ, TypeVar):
-            r = self.rewrite_type_variable(typ)
-            print(f"GTR({cstr}).rw() typ: {typ} typevar => {r}")
             return r
         r = self.generic_rewrite(typ, caller=callstr)
         print(f"GTR({cstr}).rw() typ: {typ} generic => {r}")
