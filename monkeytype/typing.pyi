@@ -36,7 +36,7 @@ class AnnotatedMethodInfo(NamedTuple):
     method: MethodType
 
 
-def rewriter_dec(module: str, qualname: str) -> Callable[[_F], _F]: ...
+def register_rewrite(module: str, qualname: str) -> Callable[[_F], _F]: ...
 
 AMI = AnnotatedMethodInfo
 AMIS: AnnotatedMethodInfo
