@@ -334,7 +334,6 @@ class TestFunctionStub:
         expected = "def has_forward_ref() -> Optional['TestFunctionStub']: ..."
         assert stub.render() == expected
 
-    @pytest.mark.xfail(reason='We get Generator[ForwardRef(), ...].')
     def test_forward_ref_annotation_within_generator(self):
         stub = FunctionStub('foo',
                             inspect.signature(has_forward_ref_within_generator),
