@@ -389,7 +389,7 @@ class RenderAnnotation(GenericTypeRewriter[str]):
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
         print(f"RAN({cstr}).rw() typ: {typ}")
-        print(f"RAN registry: {self.registry}")
+        # print(f"RAN registry: {self.registry}")
         callstr = f"RAN({cstr}).rw()"
         rendered = super().rewrite(typ, caller=callstr, top=top)
         if self.top and not isinstance(rendered, str):

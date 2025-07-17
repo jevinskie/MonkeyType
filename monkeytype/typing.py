@@ -457,6 +457,7 @@ class GenericTypeRewriter(Generic[T], ABC):
 
     @rewriter_dec("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
+        print(f"GTR(): rewrite_Generator: generator: {generator}")
         return self._rewrite_container(Generator, generator)
 
     def rewrite_anonymous_TypedDict(self, typed_dict):
@@ -492,7 +493,7 @@ class GenericTypeRewriter(Generic[T], ABC):
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"GTR({cstr}).rw() typ: {typ}")
-        print(f"GTR registry: {self.registry}")
+        # print(f"GTR() registry: id: {id(self.registry):#010x} reg: {self.registry}")
         callstr = f"GTR({cstr}).rw()"
         r = None
         if is_any(typ):
@@ -674,6 +675,8 @@ class RewriteGenerator(TypeRewriter):
 
     @rewriter_dec("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
+        print(f"RG(): rewrite_Generator: generator: {generator}")
+        print(f"RG() registry: id: {id(self.registry):#010x} reg: {self.registry}")
         args = generator.__args__
         if args[1] is NoneType and args[2] is NoneType:
             return Iterator[args[0]]
