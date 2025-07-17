@@ -34,10 +34,13 @@ from monkeytype.typing import (
     is_list,
     is_typed_dict,
     make_typed_dict,
+    register_rewrite,
     shrink_types,
     types_equal,
     RewriteGenerator,
     TypeRewriter,
+    AMI,
+    AMIS,
     DUMMY_OPTIONAL_TYPED_DICT_NAME,
     DUMMY_REQUIRED_TYPED_DICT_NAME,
     DUMMY_TYPED_DICT_NAME,
@@ -639,7 +642,8 @@ T = TypeVar("T")
 
 class RewriteListToInt(TypeRewriter):
     """Dummy rewriter for testing."""
-    def rewrite_List(self, lst):
+    @register_rewrite("typing", "List")
+    def rewrite_List(self, lst, meta: AMI = AMIS):
         return int
 
     def rewrite_type_variable(self, type_variable):
@@ -665,7 +669,7 @@ class TestTypeRewriter:
         ],
     )
     def test_rewrite_TypedDict(self, typ, expected):
-        rewritten = RewriteListToInt().rewrite(typ)
+        rewritten = RewriteListToInt(top=True).rewrite(typ)
         assert rewritten == expected
 
 
