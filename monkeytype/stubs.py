@@ -386,10 +386,22 @@ class RenderAnnotation(GenericTypeRewriter):
         print(f"RA.rewrite_FR fr: {fr}")
         return fr.__forward_arg__
 
+    @register_rewrite("typing", "Any")
+    def rewrite_Any(self, any, meta: AMI = AMIS):
+        print(f"RA.rewrite_Any any: {any}")
+        return str(any)
+
+    # FIXME: need (internal) type aliases, this should
+    # also handle collections.abc.Iterable
+    # @register_rewrite("typing", "Iterable")
+    # def rewrite_Any(self, iterable, meta: AMI = AMIS):
+    #     print(f"RA.rewrite_Iterable iterable: {iterable}")
+    #     # return str(iterable)
+    #     return "Iterable"
+
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
         print(f"RAN({cstr}).rw() typ: {typ}")
-        print(f"RAN registry: {self.registry}")
         callstr = f"RAN({cstr}).rw()"
         rendered = super().rewrite(typ, caller=callstr, top=top)
         if self.top and not isinstance(rendered, str):

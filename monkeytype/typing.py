@@ -572,7 +572,7 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
         print(f"GTR({cstr}).rw() typ: {typ}")
-        print(f"GTR() registry: id: {id(self.registry):#010x} reg: {self.registry}")
+        # print(f"GTR() registry: id: {id(self.registry):#010x} reg: {self.registry}")
         if isinstance(typ, TypeVar):
             print(f"GTR({cstr}).rw() typ: {typ} TYPEVAR TYPEVAR TYPEVAR TypeVar found!")
         callstr = f"GTR({cstr}).rw()"
