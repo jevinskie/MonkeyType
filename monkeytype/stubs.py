@@ -45,7 +45,7 @@ from monkeytype.typing import (
     field_annotations,
     make_generator,
     make_iterator,
-    rewriter_dec,
+    register_rewrite,
     shrink_types,
 )
 from monkeytype.util import get_name_in_module, pascal_case
@@ -311,7 +311,7 @@ def _get_optional_elem(anno: Any) -> Any:
     return Union[elems]
 
 
-class RenderAnnotation(GenericTypeRewriter[str]):
+class RenderAnnotation(GenericTypeRewriter):
     """Render annotation recursively."""
 
     def make_anonymous_typed_dict(
@@ -374,14 +374,14 @@ class RenderAnnotation(GenericTypeRewriter[str]):
     def make_container_type(self, container_type: str, elements: str) -> str:
         return f"{container_type}[{elements}]"
 
-    @rewriter_dec("typing", "Union")
+    @register_rewrite("typing", "Union")
     def rewrite_Union(self, union: type, meta: AMI = AMIS) -> str:
         if _is_optional(union):
             elem_type = _get_optional_elem(union)
             return "Optional[" + self.rewrite(elem_type) + "]"
         return self._rewrite_container(Union, union)
 
-    @rewriter_dec("typing", "ForwardRef")
+    @register_rewrite("typing", "ForwardRef")
     def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
         print(f"RA.rewrite_FR fr: {fr}")
         return fr.__forward_arg__
