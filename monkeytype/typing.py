@@ -6,8 +6,6 @@
 
 from __future__ import annotations
 
-import traceback
-
 import functools
 import importlib
 import inspect
@@ -57,7 +55,7 @@ if not TYPE_CHECKING:
         from rich import print
     except ImportError:
         pass
-
+import rich.pretty
 
 DUMMY_TYPED_DICT_NAME = "DUMMY_NAME"
 DUMMY_REQUIRED_TYPED_DICT_NAME = "REQUIRED_TYPED_DICT_NAME"
@@ -460,12 +458,24 @@ class GenericTypeRewriterBase:
     @classmethod
     def rewrite_method_for(cls, namepath: NamePath) -> AnnotatedMethodInfo:
         for mcls in cls.mro():
+            isc = issubclass(mcls, GenericTypeRewriter)
+            print(f"GenericTypeRewriterBase.rewrite_method_for: cls: {cls} np: {namepath} mcls: {mcls} isc: {isc}")
             if not issubclass(mcls, GenericTypeRewriter):
                 continue
             rewriter = mcls.rewrite_methods().get(namepath, None)
             if rewriter is not None:
                 return rewriter
-        raise KeyError(f"No rewrite method for NP: {namepath} cls.np: {get_namepath(cls)} methods: {cls.registry()}")
+        print("No rewrite method for NP:")
+        rich.pretty.pprint(namepath)
+        print("\n\n\n")
+        print(f"cls: {cls} cls.np:")
+        rich.pretty.pprint(get_namepath(cls))
+        print("\n\n\n")
+        print("methods:")
+        rich.pretty.pprint(cls.registry())
+
+        # raise KeyError(f"No rewrite method for NP: {namepath} cls.np: {get_namepath(cls)} methods: {cls.registry()}")
+        raise KeyError(f"No rewrite method for NP: {namepath}")
 
     @property
     def top(self) -> bool:
@@ -534,6 +544,10 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
     def rewrite_Tuple(self, tup, meta: AMI = AMIS):
         return self._rewrite_container(Tuple, tup)
 
+    # @register_rewrite("typing", "Any")
+    # def rewrite_Any(self, tup, meta: AMI = AMIS):
+    #     return self._rewrite_container(Any, tup)
+
     @register_rewrite("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
         print(f"GTR(): rewrite_Generator: generator: {generator}")
@@ -568,6 +582,17 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
     def rewrite_Union(self, union, meta: AMI = AMIS) -> Any:
         print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
+
+    @register_rewrite("typing", "Any")
+    def rewrite_Any(self, any, meta: AMI = AMIS) -> Any:
+        print(f"GenericTypeRewriter.rewrite_Any() self: {self} any: {any} meta: {meta}")
+        return any
+
+    @register_rewrite("typing", "Iterator")
+    def rewrite_Iterator(self, iterator, meta: AMI = AMIS):
+        print(f"GTR(): rewrite_Iterator: iterator: {iterator}")
+        return self._rewrite_container(Iterator, iterator)
+
 
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
