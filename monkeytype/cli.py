@@ -168,6 +168,8 @@ def apply_stub_using_libcst(
     overwrite_existing_annotations: bool,
     confine_new_imports_in_type_checking_block: bool = False,
 ) -> str:
+    open("stub-stub.txt", "w").write(stub)
+    open("stub-src.txt", "w").write(source)
     try:
         stub_module = parse_module(stub)
         source_module = parse_module(source)

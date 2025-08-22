@@ -21,7 +21,7 @@ def is_typed_dict(typ: type) -> bool:
     return isinstance(typ, _TypedDictMeta)
 
 
-def is_any(typ: Any) -> bool:
+def is_any(typ: type[Any]) -> bool:
     return typ is Any
 
 
@@ -68,7 +68,7 @@ def name_of_generic(typ: Any) -> str:
 
 def is_forward_ref(typ: Any) -> bool:
     r = isinstance(typ, ForwardRef)
-    print(f"is_forward_ref({typ}) => {r}")
+    # print(f"is_forward_ref({typ}) => {r}")
     return r
 
 

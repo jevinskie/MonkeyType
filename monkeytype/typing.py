@@ -459,7 +459,7 @@ class GenericTypeRewriterBase:
     def rewrite_method_for(cls, namepath: NamePath) -> AnnotatedMethodInfo:
         for mcls in cls.mro():
             isc = issubclass(mcls, GenericTypeRewriter)
-            print(f"GenericTypeRewriterBase.rewrite_method_for: cls: {cls} np: {namepath} mcls: {mcls} isc: {isc}")
+            # print(f"GenericTypeRewriterBase.rewrite_method_for: cls: {cls} np: {namepath} mcls: {mcls} isc: {isc}")
             if not issubclass(mcls, GenericTypeRewriter):
                 continue
             rewriter = mcls.rewrite_methods().get(namepath, None)
@@ -514,13 +514,13 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
 
     def _rewrite_container(self, cls, container):
         if container.__module__ != "typing":
-            print(f"_rewrite_container() container: {container} mod: {container.__module__}")
+            # print(f"_rewrite_container() container: {container} mod: {container.__module__}")
             return self.rewrite_malformed_container(container)
         args = getattr(container, "__args__", None)
         if args is None:
             return self.rewrite_malformed_container(container)
         elif args == ((),):  # special case of empty tuple `Tuple[()]`
-            print(f"this better be a tuple: cls: {cls} container: {container}")
+            # print(f"this better be a tuple: cls: {cls} container: {container}")
             elems = self.make_builtin_tuple(())
         else:
             elems = self.make_builtin_tuple(
@@ -550,7 +550,7 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
 
     @register_rewrite("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
-        print(f"GTR(): rewrite_Generator: generator: {generator}")
+        # print(f"GTR(): rewrite_Generator: generator: {generator}")
         return self._rewrite_container(Generator, generator)
 
     def rewrite_anonymous_TypedDict(self, typed_dict):
@@ -580,26 +580,27 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
 
     @register_rewrite("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS) -> Any:
-        print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
+        # print(f"GenericTypeRewriter.rewrite_Union() self: {self} union: {union} meta: {meta}")
         return self._rewrite_container(Union, union)
 
     @register_rewrite("typing", "Any")
     def rewrite_Any(self, any, meta: AMI = AMIS) -> Any:
-        print(f"GenericTypeRewriter.rewrite_Any() self: {self} any: {any} meta: {meta}")
+        # print(f"GenericTypeRewriter.rewrite_Any() self: {self} any: {any} meta: {meta}")
         return any
 
     @register_rewrite("typing", "Iterator")
     def rewrite_Iterator(self, iterator, meta: AMI = AMIS):
-        print(f"GTR(): rewrite_Iterator: iterator: {iterator}")
+        # print(f"GTR(): rewrite_Iterator: iterator: {iterator}")
         return self._rewrite_container(Iterator, iterator)
 
 
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"GTR({cstr}).rw() typ: {typ}")
+        # print(f"GTR({cstr}).rw() typ: {typ}")
         # print(f"GTR() registry: id: {id(self.registry):#010x} reg: {self.registry}")
         if isinstance(typ, TypeVar):
-            print(f"GTR({cstr}).rw() typ: {typ} TYPEVAR TYPEVAR TYPEVAR TypeVar found!")
+            # print(f"GTR({cstr}).rw() typ: {typ} TYPEVAR TYPEVAR TYPEVAR TypeVar found!")
+            pass
         callstr = f"GTR({cstr}).rw()"
         r = None
         if is_any(typ):
@@ -613,21 +614,21 @@ class GenericTypeRewriter(GenericTypeRewriterBase, Generic[T], ABC):
         elif isinstance(typ, TypeVar):
             # NOTE: this used to be called below the call to _call_annotated_method
             r = self.rewrite_type_variable(typ)
-            print(f"GTR({cstr}).rw() typ: {typ} typevar22 => {r}")
+            # print(f"GTR({cstr}).rw() typ: {typ} typevar22 => {r}")
             return r
         else:
             # raise TypeError(f"Unknown type: {typ}")
             r = self.generic_rewrite(typ)
-            print(f"rewrite({typ}) generic2 => {r}")
+            # print(f"rewrite({typ}) generic2 => {r}")
             return r
         rewriter = self.rewrite_method_for(np)
         if rewriter:
-            print(f"GTR({cstr}).rw() rewriter: {rewriter}")
+            # print(f"GTR({cstr}).rw() rewriter: {rewriter}")
             r = self._call_annotated_method(rewriter, typ)
-            print(f"GTR({cstr}).rw() typ: {typ} decorator => {r}")
+            # print(f"GTR({cstr}).rw() typ: {typ} decorator => {r}")
             return r
         r = self.generic_rewrite(typ, caller=callstr)
-        print(f"GTR({cstr}).rw() typ: {typ} generic => {r}")
+        # print(f"GTR({cstr}).rw() typ: {typ} generic => {r}")
         return r
 
 
@@ -680,7 +681,7 @@ class RemoveEmptyContainers(TypeRewriter):
 
     @register_rewrite("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
-        print(f"RemoveEmptyContainers.rewrite_Union() self: {self} union: {union} meta: {meta}")
+        # print(f"RemoveEmptyContainers.rewrite_Union() self: {self} union: {union} meta: {meta}")
         elems = tuple(self.rewrite(e) for e in union.__args__ if not self._is_empty(e))
         if elems:
             return Union[elems]
@@ -693,7 +694,7 @@ class RewriteConfigDict(TypeRewriter):
 
     @register_rewrite("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
-        print(f"RewriteConfigDict.rewrite_Union() self: {self} union: {union} meta: {meta}")
+        # print(f"RewriteConfigDict.rewrite_Union() self: {self} union: {union} meta: {meta}")
         key_type = None
         value_types = []
         for e in union.__args__:
@@ -726,7 +727,7 @@ class RewriteLargeUnion(TypeRewriter):
 
     @register_rewrite("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
-        print(f"RewriteLargeUnion.rewrite_Union() self: {self} union: {union} meta: {meta}")
+        # print(f"RewriteLargeUnion.rewrite_Union() self: {self} union: {union} meta: {meta}")
         if len(union.__args__) <= self.max_union_len:
             return union
 
@@ -765,9 +766,9 @@ class ChainedRewriter(TypeRewriter):
 
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"CHN({cstr}).rw() typ: {typ}")
+        # print(f"CHN({cstr}).rw() typ: {typ}")
         for i, rw in enumerate(self.rewriters):
-            print(f"CHN({cstr}).rw() rw[{i}] typ: {typ}")
+            # print(f"CHN({cstr}).rw() rw[{i}] typ: {typ}")
             callstr = f"CHN({cstr})[{i}].rw()"
             typ = rw.rewrite(typ, caller=callstr, top=top)
         return typ
@@ -776,7 +777,7 @@ class ChainedRewriter(TypeRewriter):
 class NoOpRewriter(TypeRewriter):
     def rewrite(self, typ, caller: str | None = None, top: bool = False):
         cstr = caller if caller is not None else ""
-        print(f"NOP({cstr}).rw() typ: {typ}")
+        # print(f"NOP({cstr}).rw() typ: {typ}")
         return typ
 
 
@@ -785,8 +786,8 @@ class RewriteGenerator(TypeRewriter):
 
     @register_rewrite("typing", "Generator")
     def rewrite_Generator(self, generator, meta: AMI = AMIS):
-        print(f"RG(): rewrite_Generator: generator: {generator}")
-        print(f"RG() registry: id: {id(self.registry):#010x} reg: {self.registry}")
+        # print(f"RG(): rewrite_Generator: generator: {generator}")
+        # print(f"RG() registry: id: {id(self.registry):#010x} reg: {self.registry}")
         args = generator.__args__
         if args[1] is NoneType and args[2] is NoneType:
             return Iterator[args[0]]
@@ -847,7 +848,7 @@ class RewriteMostSpecificCommonBase(TypeRewriter):
 
     @register_rewrite("typing", "Union")
     def rewrite_Union(self, union, meta: AMI = AMIS):
-        print(f"RewriteMostSpecificCommonBase.rewrite_Union() self: {self} union: {union} meta: {meta}")
+        # print(f"RewriteMostSpecificCommonBase.rewrite_Union() self: {self} union: {union} meta: {meta}")
         """
         Rewrite the union if possible, if no meaningful rewrite is possible,
         return the original union.

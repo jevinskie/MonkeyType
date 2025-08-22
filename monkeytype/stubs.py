@@ -281,12 +281,15 @@ class ImportBlockStub(Stub):
             if module == "_io":
                 module = module[1:]
             if len(names) == 1:
-                imports.append("from %s import %s" % (module, names[0]))
+                # imports.append("from %s import %s" % (module, names[0]))
+                imports.append(f"import {module}.{names[0]}")
             else:
-                stanza = ["from %s import (" % (module,)]
-                stanza.extend(["    %s," % (name,) for name in names])
-                stanza.append(")")
-                imports.append("\n".join(stanza))
+                # stanza = ["from %s import (" % (module,)]
+                # stanza.extend(["    %s," % (name,) for name in names])
+                # stanza.append(")")
+                # imports.append("\n".join(stanza))
+                for n in names:
+                    imports.append(f"import {module}.{n}")
         return "\n".join(imports)
 
     def __repr__(self) -> str:
@@ -332,7 +335,7 @@ class RenderAnnotation(GenericTypeRewriter):
 
     def generic_rewrite(self, typ: Any, caller: str | None = None) -> str:
         cstr = caller if caller is not None else ""
-        print(f"RAN({cstr}).generic_rewrite() typ: {typ}")
+        # print(f"RAN({cstr}).generic_rewrite() typ: {typ}")
         if hasattr(typ, "__supertype__"):
             rendered = str(typ.__name__)
         elif is_forward_ref(typ):
@@ -383,24 +386,24 @@ class RenderAnnotation(GenericTypeRewriter):
 
     @register_rewrite("typing", "ForwardRef")
     def rewrite_ForwardRef(self, fr: ForwardRef, meta: AMI = AMIS) -> str:
-        print(f"RA.rewrite_FR fr: {fr}")
+        # print(f"RA.rewrite_FR fr: {fr}")
         return fr.__forward_arg__
 
     @register_rewrite("typing", "Any")
     def rewrite_Any(self, any, meta: AMI = AMIS):
-        print(f"RA.rewrite_Any any: {any}")
+        # print(f"RA.rewrite_Any any: {any}")
         return str(any)
 
     # FIXME: need (internal) type aliases, this should
     # also handle collections.abc.Iterable
     @register_rewrite("typing", "Iterable")
     def rewrite_Iterable(self, iterable, meta: AMI = AMIS):
-        print(f"RA.rewrite_Iterable iterable: {iterable}")
+        # print(f"RA.rewrite_Iterable iterable: {iterable}")
         return str(iterable)
 
     def rewrite(self, typ: type, caller: str | None = None, top: bool = False) -> str:
         cstr = caller if caller is not None else ""
-        print(f"RAN({cstr}).rw() typ: {typ}")
+        # print(f"RAN({cstr}).rw() typ: {typ}")
         callstr = f"RAN({cstr}).rw()"
         rendered = super().rewrite(typ, caller=callstr, top=top)
         if self.top and not isinstance(rendered, str):
@@ -421,29 +424,29 @@ class RenderAnnotation(GenericTypeRewriter):
 
 def render_annotation(anno: Any) -> str:
     """Convert an annotation into its stub representation."""
-    print(f"render_annotation(): anno: {anno}")
+    # print(f"render_annotation(): anno: {anno}")
     orig = anno
     last = anno
     max_iter = 100
     for i in range(max_iter):
         is_last = i == (max_iter - 1)
         anno = RenderAnnotation(top=is_last).rewrite(anno)
-        print(f"loop[{i}] enter: last: {last} anno: {anno}")
+        # print(f"loop[{i}] enter: last: {last} anno: {anno}")
         if last is anno:
-            print("last is anno")
+            # print("last is anno")
             break
         if is_forward_ref(last) and is_forward_ref(anno) and last.__forward_arg__ == anno.__forward_arg__:  # type: ignore
-            print("is_foward_ref")
+            # print("is_foward_ref")
             break
         if last == anno:
-            print("last == anno")
+            # print("last == anno")
             break
-        print(f"loop[{i}] exit: last: {last} anno: {anno}")
+        # print(f"loop[{i}] exit: last: {last} anno: {anno}")
         last = anno
     else:
-        print("render_annotation for else")
+        # print("render_annotation for else")
         raise RuntimeError(f"render_annotation too many iterations: orig: {orig} last: {last} anno: {anno}")
-    print("render_annotation for done")
+    # print("render_annotation for done")
     if not isinstance(anno, str):
         raise TypeError(f"render_annotation result not str: orig: {orig} last: {last} anno: {anno}")
     return anno
